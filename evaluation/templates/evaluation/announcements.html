@@ -1,0 +1,46 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Announcements — FYP Evaluation{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h2>Announcements &amp; Results</h2>
+    <p>Public announcements and winners from UniKL MIIT FYP Evaluation 2026</p>
+</div>
+
+<!-- Winners section -->
+{% if winners %}
+<div class="winners-banner">
+    <h2>🏆 FYP Winners 2026 🏆</h2>
+</div>
+{% for ann in winners %}
+<div class="card">
+    <div class="card-title" style="color: var(--gold);">🏆 {{ ann.title }}</div>
+    <div style="white-space: pre-wrap; line-height: 1.7; font-size: .92rem;">{{ ann.content }}</div>
+    <p style="color: var(--muted); font-size: .78rem; margin-top: 1rem;">
+        Published: {{ ann.published_at|date:"d M Y, H:i" }}
+    </p>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- General announcements -->
+{% if general %}
+<div class="card-title" style="margin-bottom: 1rem;">General Announcements</div>
+{% for ann in general %}
+<div class="card">
+    <div class="card-title">{{ ann.title }}</div>
+    <div style="white-space: pre-wrap; line-height: 1.7; font-size: .92rem;">{{ ann.content }}</div>
+    <p style="color: var(--muted); font-size: .78rem; margin-top: 1rem;">
+        Published: {{ ann.published_at|date:"d M Y, H:i" }}
+    </p>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if not announcements %}
+<div class="empty-state">
+    <p>No announcements yet. Check back later.</p>
+</div>
+{% endif %}
+
+{% endblock %}

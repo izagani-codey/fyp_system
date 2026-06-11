@@ -1,0 +1,57 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Home — UniKL MIIT FYP Evaluation 2026{% endblock %}
+{% block content %}
+
+<div class="hero">
+    <p class="hero-tag">UniKL MIIT — Final Year Project</p>
+    <h1>FYP <span>Evaluation</span> 2026</h1>
+    <p class="hero-sub">
+        Conference-style evaluation system for UniKL MIIT Final Year Projects.
+        Register your project, submit your work, and get evaluated by expert judges.
+    </p>
+    <div class="hero-btns">
+        <a href="{% url 'register_student' %}" class="hero-btn hero-btn-gold">Register as Student</a>
+        <a href="{% url 'register_judge' %}" class="hero-btn hero-btn-white">Register as Judge</a>
+        <a href="{% url 'login' %}" class="hero-btn hero-btn-white">Login</a>
+    </div>
+</div>
+
+<!-- Role info cards -->
+<div class="info-grid">
+    <div class="info-card">
+        <div class="info-card-icon">🎓</div>
+        <h3>Students</h3>
+        <p>Register your FYP project as a group, submit your abstract and video presentation, and track evaluation progress — all in one place.</p>
+        <a href="{% url 'register_student' %}" class="btn btn-primary btn-sm mt-2">Register Now</a>
+    </div>
+    <div class="info-card">
+        <div class="info-card-icon">⚖️</div>
+        <h3>Judges</h3>
+        <p>Register as an industry or academic expert. Once approved by PIC, access your assigned projects and submit structured evaluations.</p>
+        <a href="{% url 'register_judge' %}" class="btn btn-gold btn-sm mt-2">Join as Judge</a>
+    </div>
+    <div class="info-card">
+        <div class="info-card-icon">📋</div>
+        <h3>Process</h3>
+        <p>Projects go through registration → submission → judge assignment → evaluation. Results are compiled by the Programme-In-Charge (PIC).</p>
+        <a href="{% url 'about' %}" class="btn btn-outline btn-sm mt-2">Learn More</a>
+    </div>
+</div>
+
+<!-- Recent announcements -->
+{% if recent_announcements %}
+<div class="card">
+    <div class="card-title">Latest Announcements</div>
+    {% for ann in recent_announcements %}
+    <div style="padding: .75rem 0; border-bottom: 1px solid var(--border);">
+        <strong>{{ ann.title }}</strong>
+        {% if ann.is_winners %}<span class="badge badge-approved" style="margin-left:.5rem;">🏆 Winners</span>{% endif %}
+        <p style="color: var(--muted); font-size: .85rem; margin-top: .3rem;">{{ ann.content|truncatewords:30 }}</p>
+        <small style="color: var(--muted);">{{ ann.published_at|date:"d M Y" }}</small>
+    </div>
+    {% endfor %}
+    <a href="{% url 'public_announcements' %}" class="btn btn-outline btn-sm mt-2">View All</a>
+</div>
+{% endif %}
+
+{% endblock %}
