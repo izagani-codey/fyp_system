@@ -1,0 +1,40 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Submit Project — FYP Evaluation{% endblock %}
+{% block content %}
+<div class="form-wrap">
+    <div class="card">
+        <div class="breadcrumb"><a href="{% url 'student_dashboard' %}">Dashboard</a> › Submit Project</div>
+        <div class="page-header">
+            <h2>Submit Project Materials</h2>
+            <p>{{ project.title }}</p>
+        </div>
+        {% if submission.status == 'rejected' and submission.pic_remarks %}
+        <div class="alert alert-warning">
+            <span><strong>Previous submission rejected:</strong> {{ submission.pic_remarks }}</span>
+        </div>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="non-field-errors">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
+            {% endif %}
+            {% for field in form %}
+            <div class="form-group {% if field.errors %}field-error{% endif %}">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}
+                {% if field.errors %}
+                <ul class="error-list">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <div style="background:#f0f4ff;padding:.75rem;border-radius:4px;font-size:.82rem;margin-bottom:1rem;color:var(--muted);">
+                You may provide abstract text, upload a PDF/Word file, or both. At least one is required.
+                Video link is strongly recommended but not mandatory.
+            </div>
+            <button type="submit" class="btn btn-gold btn-full">Submit Project Materials</button>
+            <a href="{% url 'student_dashboard' %}" style="display:block;text-align:center;margin-top:.75rem;font-size:.88rem;">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

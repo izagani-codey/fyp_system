@@ -1,0 +1,27 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Notifications — FYP Evaluation{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h2>All Notifications</h2>
+    <p><a href="{% url 'student_dashboard' %}">← Back to Dashboard</a></p>
+</div>
+
+<div class="card">
+    {% if notifications %}
+    <ul class="notif-list">
+        {% for n in notifications %}
+        <li class="notif-item">
+            <span>{{ n.message }}</span>
+            <br><span class="notif-time">{{ n.created_at|date:"d M Y H:i" }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-state">
+        <p>No notifications yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
