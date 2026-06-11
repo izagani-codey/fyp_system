@@ -1,0 +1,83 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}PIC Dashboard — FYP Evaluation{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h2>PIC Dashboard</h2>
+    <p>UniKL MIIT FYP Evaluation Management — Overview</p>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-num">{{ total_projects }}</div>
+        <div class="stat-label">Total Projects</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-num">{{ pending_projects }}</div>
+        <div class="stat-label">Pending Approvals</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-num">{{ approved_projects }}</div>
+        <div class="stat-label">Approved Projects</div>
+    </div>
+    <div class="stat-card gold">
+        <div class="stat-num">{{ pending_submissions }}</div>
+        <div class="stat-label">Submissions to Review</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-num">{{ accepted_submissions }}</div>
+        <div class="stat-label">Accepted Submissions</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num">{{ approved_judges }}</div>
+        <div class="stat-label">Approved Judges</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-num">{{ pending_evaluations }}</div>
+        <div class="stat-label">Evaluations Pending</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-num">{{ completed_evaluations }}</div>
+        <div class="stat-label">Evaluations Done</div>
+    </div>
+</div>
+
+<div class="info-grid">
+    <a href="{% url 'pic_project_registrations' %}" class="info-card" style="text-decoration:none;">
+        <div class="info-card-icon">&#128193;</div>
+        <h3>Manage Projects</h3>
+        <p>Approve or reject project registrations, review submissions.</p>
+    </a>
+    <a href="{% url 'pic_judge_registrations' %}" class="info-card" style="text-decoration:none;">
+        <div class="info-card-icon">&#9878;</div>
+        <h3>Manage Judges</h3>
+        <p>Approve or reject judge registrations.</p>
+    </a>
+    <a href="{% url 'pic_submissions' %}" class="info-card" style="text-decoration:none;">
+        <div class="info-card-icon">&#128196;</div>
+        <h3>Review Submissions</h3>
+        <p>Review abstract/video submissions and accept or reject.</p>
+    </a>
+    <a href="{% url 'pic_evaluations' %}" class="info-card" style="text-decoration:none;">
+        <div class="info-card-icon">&#128202;</div>
+        <h3>Track Evaluations</h3>
+        <p>Monitor pending and completed judge evaluations.</p>
+    </a>
+    <a href="{% url 'pic_results' %}" class="info-card" style="text-decoration:none;">
+        <div class="info-card-icon">&#127942;</div>
+        <h3>Results</h3>
+        <p>View compiled scores and export CSV.</p>
+    </a>
+    <a href="{% url 'pic_deadlines' %}" class="info-card" style="text-decoration:none;">
+        <div class="info-card-icon">&#9200;</div>
+        <h3>Manage Deadlines</h3>
+        <p>Set registration, submission, and evaluation deadlines.</p>
+    </a>
+    <a href="{% url 'pic_announcements' %}" class="info-card" style="text-decoration:none;">
+        <div class="info-card-icon">&#128226;</div>
+        <h3>Announcements</h3>
+        <p>Create and publish announcements and winners.</p>
+    </a>
+</div>
+
+{% endblock %}

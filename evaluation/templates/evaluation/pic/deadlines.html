@@ -1,0 +1,65 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Manage Deadlines — PIC{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › Deadlines</div>
+    <h2>Manage Deadlines</h2>
+    <p>Set the three system deadlines. Active deadlines are enforced &mdash; students and judges cannot act after a deadline passes.</p>
+</div>
+
+<!-- Current deadlines summary -->
+<div class="deadline-grid">
+{% for dtype, dlabel in deadline_types %}
+<div class="deadline-card">
+    <div class="deadline-label">{{ dlabel }}</div>
+    {% if dtype == 'registration' and deadlines.registration %}
+    <div class="deadline-date">{{ deadlines.registration.deadline_date|date:"d M Y H:i" }}</div>
+    <div class="deadline-status">{% if deadlines.registration.is_passed %}<span style="color:var(--red);">Passed</span>{% else %}<span style="color:#28a745;">Active</span>{% endif %}</div>
+    {% elif dtype == 'submission' and deadlines.submission %}
+    <div class="deadline-date">{{ deadlines.submission.deadline_date|date:"d M Y H:i" }}</div>
+    <div class="deadline-status">{% if deadlines.submission.is_passed %}<span style="color:var(--red);">Passed</span>{% else %}<span style="color:#28a745;">Active</span>{% endif %}</div>
+    {% elif dtype == 'evaluation' and deadlines.evaluation %}
+    <div class="deadline-date">{{ deadlines.evaluation.deadline_date|date:"d M Y H:i" }}</div>
+    <div class="deadline-status">{% if deadlines.evaluation.is_passed %}<span style="color:var(--red);">Passed</span>{% else %}<span style="color:#28a745;">Active</span>{% endif %}</div>
+    {% else %}
+    <div class="deadline-date" style="color:var(--muted);">Not set</div>
+    {% endif %}
+</div>
+{% endfor %}
+</div>
+
+<!-- Set/update deadline forms -->
+{% for dtype, dlabel in deadline_types %}
+<div class="card">
+    <div class="card-title">{{ dlabel }}</div>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="deadline_type" value="{{ dtype }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="dt_{{ dtype }}">Date &amp; Time</label>
+                <input type="datetime-local" id="dt_{{ dtype }}" name="deadline_date"
+                    {% if dtype == 'registration' and deadlines.registration %}value="{{ deadlines.registration.deadline_date|date:'Y-m-d\TH:i' }}"
+                    {% elif dtype == 'submission' and deadlines.submission %}value="{{ deadlines.submission.deadline_date|date:'Y-m-d\TH:i' }}"
+                    {% elif dtype == 'evaluation' and deadlines.evaluation %}value="{{ deadlines.evaluation.deadline_date|date:'Y-m-d\TH:i' }}"
+                    {% endif %}>
+            </div>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <div style="display:flex;align-items:center;gap:.5rem;margin-top:.55rem;">
+                    <input type="checkbox" name="is_active" id="active_{{ dtype }}" value="1"
+                        {% if dtype == 'registration' and deadlines.registration and deadlines.registration.is_active %}checked
+                        {% elif dtype == 'submission' and deadlines.submission and deadlines.submission.is_active %}checked
+                        {% elif dtype == 'evaluation' and deadlines.evaluation and deadlines.evaluation.is_active %}checked
+                        {% else %}checked{% endif %}>
+                    <label for="active_{{ dtype }}" style="font-weight:400;margin:0;">Active (enforced)</label>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Save {{ dlabel }}</button>
+    </form>
+</div>
+{% endfor %}
+
+{% endblock %}

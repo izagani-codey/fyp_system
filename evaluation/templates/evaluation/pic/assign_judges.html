@@ -1,0 +1,66 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Assign Judges — PIC{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'pic_project_registrations' %}">Projects</a> › Assign Judges</div>
+    <h2>Assign Judges</h2>
+    <p>{{ project.title }}</p>
+</div>
+
+<!-- Current assignments -->
+<div class="card">
+    <div class="card-title">Current Assignments</div>
+    {% with current=project.assignments.all %}
+    {% if current %}
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Judge</th><th>Department</th><th>Assigned</th><th>Evaluation</th></tr></thead>
+            <tbody>
+            {% for a in current %}
+            <tr>
+                <td>{{ a.judge.full_name }}</td>
+                <td>{{ a.judge.department }}</td>
+                <td>{{ a.assigned_at|date:"d M Y" }}</td>
+                <td>{% if a.evaluation %}<span class="badge badge-approved">Done &mdash; {{ a.evaluation.total_score }}/95</span>{% else %}<span class="badge badge-pending">Pending</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No judges assigned yet.</p>
+    {% endif %}
+    {% endwith %}
+</div>
+
+<!-- Assign new judges -->
+<div class="card">
+    <div class="card-title">Assign Judges</div>
+    {% if approved_judges %}
+    <form method="post">
+        {% csrf_token %}
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.75rem;margin-bottom:1rem;">
+        {% for judge in approved_judges %}
+        <label style="display:flex;align-items:center;gap:.65rem;padding:.75rem;border:1px solid var(--border);border-radius:6px;cursor:pointer;
+            {% if judge.id in existing_judge_ids %}background:#f0fff4;border-color:#c3e6cb;{% endif %}">
+            <input type="checkbox" name="judge_ids" value="{{ judge.id }}"
+                {% if judge.id in existing_judge_ids %}checked disabled{% endif %}>
+            <span>
+                <strong style="font-size:.9rem;">{{ judge.full_name }}</strong><br>
+                <small style="color:var(--muted);">{{ judge.department }} &mdash; {{ judge.expertise_area }}</small>
+            </span>
+            {% if judge.id in existing_judge_ids %}
+            <span style="margin-left:auto;color:#155724;font-size:.75rem;">Assigned</span>
+            {% endif %}
+        </label>
+        {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary">Assign Selected Judges</button>
+    </form>
+    {% else %}
+    <p class="text-muted">No approved judges available. Approve judges first.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

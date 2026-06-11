@@ -1,0 +1,57 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Results — PIC{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › Results</div>
+    <h2>Compiled Results</h2>
+    <p>Scores are visible to PIC only.</p>
+</div>
+
+<div style="margin-bottom:1rem;">
+    <a href="{% url 'pic_export_csv' %}" class="btn btn-gold">Export CSV</a>
+</div>
+
+{% for r in results %}
+<div class="card">
+    <div class="card-title">
+        {{ r.project.title }}
+        {% if r.average_score %}
+        <span style="float:right;font-size:1.1rem;color:var(--blue);">Avg: {{ r.average_score }}/95</span>
+        {% endif %}
+    </div>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:.75rem;">
+        {{ r.project.programme }} &mdash; {{ r.project.section }} &mdash;
+        Leader: {{ r.project.leader.full_name }} &mdash;
+        {{ r.evaluation_count }} evaluation{{ r.evaluation_count|pluralize }}
+    </p>
+
+    {% if r.evaluations %}
+    {% for ev in r.evaluations %}
+    <details style="margin-bottom:.5rem;">
+        <summary style="cursor:pointer;font-weight:600;color:var(--blue-light);font-size:.9rem;">
+            Judge: {{ ev.assignment.judge.full_name }} &mdash; {{ ev.total_score }}/95
+        </summary>
+        <div style="padding:.75rem 1rem;background:#f9f9f9;border-radius:0 0 4px 4px;">
+            <div class="score-row"><span class="score-label">Abstract Quality</span><span class="score-max">Max 10</span><span class="score-val">{{ ev.abstract_quality }}</span></div>
+            <div class="score-row"><span class="score-label">Problem Statement</span><span class="score-max">Max 15</span><span class="score-val">{{ ev.problem_statement }}</span></div>
+            <div class="score-row"><span class="score-label">System Functionality</span><span class="score-max">Max 25</span><span class="score-val">{{ ev.system_functionality }}</span></div>
+            <div class="score-row"><span class="score-label">Technical Implementation</span><span class="score-max">Max 20</span><span class="score-val">{{ ev.technical_implementation }}</span></div>
+            <div class="score-row"><span class="score-label">Presentation / Video</span><span class="score-max">Max 15</span><span class="score-val">{{ ev.presentation_quality }}</span></div>
+            <div class="score-row"><span class="score-label">Innovation &amp; Value</span><span class="score-max">Max 10</span><span class="score-val">{{ ev.innovation_value }}</span></div>
+            <div style="margin-top:.5rem;font-weight:700;">Total: {{ ev.total_score }}/95</div>
+            {% if ev.overall_comments %}
+            <p style="margin-top:.4rem;font-size:.85rem;color:var(--muted);font-style:italic;">{{ ev.overall_comments }}</p>
+            {% endif %}
+        </div>
+    </details>
+    {% endfor %}
+    {% else %}
+    <p class="text-muted" style="font-size:.85rem;">No evaluations submitted yet.</p>
+    {% endif %}
+</div>
+{% empty %}
+<div class="empty-state"><p>No approved projects yet.</p></div>
+{% endfor %}
+
+{% endblock %}

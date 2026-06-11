@@ -1,0 +1,57 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Evaluation Tracking — PIC{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › Evaluations</div>
+    <h2>Evaluation Tracking</h2>
+</div>
+
+{% if pending_assignments %}
+<div class="card">
+    <div class="card-title">Pending Evaluations ({{ pending_assignments|length }})</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Project</th><th>Programme</th><th>Judge</th><th>Assigned</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for a in pending_assignments %}
+            <tr>
+                <td>{{ a.project.title }}</td>
+                <td>{{ a.project.programme }}</td>
+                <td>{{ a.judge.full_name }}</td>
+                <td>{{ a.assigned_at|date:"d M Y" }}</td>
+                <td><span class="badge badge-pending">Pending</span></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if completed_assignments %}
+<div class="card">
+    <div class="card-title">Completed Evaluations ({{ completed_assignments|length }})</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Project</th><th>Judge</th><th>Total Score</th><th>Submitted</th></tr></thead>
+            <tbody>
+            {% for a in completed_assignments %}
+            <tr>
+                <td>{{ a.project.title }}</td>
+                <td>{{ a.judge.full_name }}</td>
+                <td><strong>{{ a.evaluation.total_score }}/95</strong></td>
+                <td>{{ a.evaluation.submitted_at|date:"d M Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if not pending_assignments and not completed_assignments %}
+<div class="empty-state"><p>No judge assignments yet.</p></div>
+{% endif %}
+
+{% endblock %}

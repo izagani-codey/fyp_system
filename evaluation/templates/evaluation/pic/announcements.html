@@ -1,0 +1,64 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Announcements — PIC{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › Announcements</div>
+    <h2>Manage Announcements</h2>
+</div>
+
+<!-- Create / Edit form -->
+<div class="card">
+    <div class="card-title">{% if edit_obj %}Edit: {{ edit_obj.title }}{% else %}New Announcement{% endif %}</div>
+    <form method="post">
+        {% csrf_token %}
+        {% if edit_obj %}<input type="hidden" name="announcement_id" value="{{ edit_obj.id }}">{% endif %}
+        {% for field in form %}
+        <div class="form-group {% if field.errors %}field-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}
+            {% if field.errors %}
+            <ul class="error-list">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <div class="gap-sm">
+            <button type="submit" class="btn btn-primary">{% if edit_obj %}Update{% else %}Create{% endif %} Announcement</button>
+            {% if edit_obj %}<a href="{% url 'pic_announcements' %}" class="btn btn-outline">Cancel Edit</a>{% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Existing announcements -->
+{% if announcements %}
+<div class="card">
+    <div class="card-title">All Announcements</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Published</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for ann in announcements %}
+            <tr>
+                <td>{{ ann.title }}</td>
+                <td>{% if ann.is_winners %}<span class="badge badge-approved">Winners</span>{% else %}<span class="badge badge-pending">General</span>{% endif %}</td>
+                <td>{% if ann.is_published %}<span class="badge badge-accepted">Published</span>{% else %}<span class="badge badge-not_submitted">Draft</span>{% endif %}</td>
+                <td>{{ ann.published_at|date:"d M Y"|default:"&mdash;" }}</td>
+                <td class="table-actions">
+                    <a href="{% url 'pic_announcements' %}?edit={{ ann.id }}" class="btn btn-outline btn-sm">Edit</a>
+                    <form method="post" action="{% url 'pic_toggle_publish' ann.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm {% if ann.is_published %}btn-danger{% else %}btn-primary{% endif %}">
+                            {% if ann.is_published %}Unpublish{% else %}Publish{% endif %}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

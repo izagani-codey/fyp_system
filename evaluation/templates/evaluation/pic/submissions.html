@@ -1,0 +1,42 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Submissions — PIC{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › Submissions</div>
+    <h2>Project Submissions</h2>
+</div>
+
+<div class="card" style="padding:1rem;">
+    <form method="get" class="gap-md">
+        <label style="margin:0;">Status:</label>
+        <select name="status" onchange="this.form.submit()">
+            <option value="" {% if not status_filter %}selected{% endif %}>All</option>
+            <option value="pending_review" {% if status_filter == 'pending_review' %}selected{% endif %}>Pending Review</option>
+            <option value="accepted"       {% if status_filter == 'accepted' %}selected{% endif %}>Accepted</option>
+            <option value="rejected"       {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Project Title</th><th>Leader</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for sub in submissions %}
+            <tr>
+                <td>{{ sub.project.title }}</td>
+                <td>{{ sub.project.leader.full_name }}</td>
+                <td>{{ sub.submitted_at|date:"d M Y" }}</td>
+                <td><span class="badge badge-{{ sub.status }}">{{ sub.get_status_display }}</span></td>
+                <td><a href="{% url 'pic_submission_detail' sub.project.id %}" class="btn btn-outline btn-sm">Review</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted">No submissions found.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

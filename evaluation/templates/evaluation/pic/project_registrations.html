@@ -1,0 +1,72 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Project Registrations — PIC{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › Project Registrations</div>
+    <h2>Project Registrations</h2>
+</div>
+
+<!-- Filter -->
+<div class="card" style="padding:1rem;">
+    <form method="get" class="gap-md">
+        <label style="margin:0;">Status:</label>
+        <select name="status" onchange="this.form.submit()">
+            <option value="" {% if not status_filter %}selected{% endif %}>All</option>
+            <option value="pending"  {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Title</th><th>Programme</th><th>Section</th><th>Leader</th><th>Submitted</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+            {% for p in projects %}
+            <tr>
+                <td>{{ p.title }}</td>
+                <td>{{ p.programme }}</td>
+                <td>{{ p.section }}</td>
+                <td>{{ p.leader.full_name }}</td>
+                <td>{{ p.created_at|date:"d M Y" }}</td>
+                <td><span class="badge badge-{{ p.registration_status }}">{{ p.get_registration_status_display }}</span></td>
+                <td class="table-actions">
+                    {% if p.registration_status == 'pending' %}
+                    <!-- Approve -->
+                    <form method="post" action="{% url 'pic_approve_project' p.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button name="action" value="approve" class="btn btn-primary btn-sm">Approve</button>
+                    </form>
+                    <!-- Reject with remarks modal-style inline -->
+                    <form method="post" action="{% url 'pic_approve_project' p.id %}" style="display:inline;" onsubmit="return promptRemarks(this)">
+                        {% csrf_token %}
+                        <input type="hidden" name="remarks" class="remarks-field">
+                        <button name="action" value="reject" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                    {% endif %}
+                    {% if p.registration_status == 'approved' %}
+                    <a href="{% url 'pic_submission_detail' p.id %}" class="btn btn-outline btn-sm">Submission</a>
+                    <a href="{% url 'pic_assign_judges' p.id %}" class="btn btn-gold btn-sm">Assign Judges</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center text-muted">No projects found.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+function promptRemarks(form) {
+    var r = prompt('Enter rejection reason (optional):') || '';
+    form.querySelector('.remarks-field').value = r;
+    return true;
+}
+</script>
+{% endblock %}

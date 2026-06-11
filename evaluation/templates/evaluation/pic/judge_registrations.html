@@ -1,0 +1,53 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Judge Registrations — PIC{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › Judge Registrations</div>
+    <h2>Judge Registrations</h2>
+</div>
+
+<div class="card" style="padding:1rem;">
+    <form method="get" class="gap-md">
+        <label style="margin:0;">Status:</label>
+        <select name="status" onchange="this.form.submit()">
+            <option value="" {% if not status_filter %}selected{% endif %}>All</option>
+            <option value="pending"  {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Expertise</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for j in judges %}
+            <tr>
+                <td>{{ j.full_name }}</td>
+                <td>{{ j.user.email }}</td>
+                <td>{{ j.department }}</td>
+                <td>{{ j.expertise_area }}</td>
+                <td>{{ j.phone_number }}</td>
+                <td><span class="badge badge-{{ j.registration_status }}">{{ j.get_registration_status_display }}</span></td>
+                <td class="table-actions">
+                    {% if j.registration_status == 'pending' %}
+                    <form method="post" action="{% url 'pic_approve_judge' j.id %}" style="display:inline;">
+                        {% csrf_token %}<button name="action" value="approve" class="btn btn-primary btn-sm">Approve</button>
+                    </form>
+                    <form method="post" action="{% url 'pic_approve_judge' j.id %}" style="display:inline;">
+                        {% csrf_token %}<button name="action" value="reject" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center text-muted">No judges found.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

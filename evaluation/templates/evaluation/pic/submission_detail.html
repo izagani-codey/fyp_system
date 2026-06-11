@@ -1,0 +1,92 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Review Submission — PIC{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'pic_submissions' %}">Submissions</a> › Review</div>
+    <h2>Submission Review</h2>
+    <p>{{ project.title }}</p>
+</div>
+
+<!-- Project & team info -->
+<div class="card">
+    <div class="card-title">Project Details</div>
+    <table>
+        <tr><td style="width:160px;font-weight:600;">Title</td><td>{{ project.title }}</td></tr>
+        <tr><td style="font-weight:600;">Programme</td><td>{{ project.programme }}</td></tr>
+        <tr><td style="font-weight:600;">Section</td><td>{{ project.section }}</td></tr>
+        <tr><td style="font-weight:600;">Supervisor</td><td>{{ project.supervisor_name }}</td></tr>
+        <tr><td style="font-weight:600;">Leader</td><td>{{ project.leader.full_name }} ({{ project.leader.student_id }})</td></tr>
+    </table>
+    {% if members %}
+    <div style="margin-top:.75rem;">
+        <strong>Group Members:</strong>
+        {% for m in members %}{{ m.student.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Submission materials -->
+<div class="card">
+    <div class="card-title">Submitted Materials
+        <span class="badge badge-{{ submission.status }}" style="margin-left:.5rem;">{{ submission.get_status_display }}</span>
+    </div>
+
+    {% if submission.abstract_text %}
+    <div style="margin-bottom:1rem;">
+        <strong>Abstract Text:</strong>
+        <div style="margin-top:.5rem;padding:.85rem;background:#f9f9f9;border-radius:4px;font-size:.9rem;line-height:1.7;white-space:pre-wrap;">{{ submission.abstract_text }}</div>
+    </div>
+    {% else %}
+    <p class="text-muted mb-2">No abstract text provided.</p>
+    {% endif %}
+
+    {% if submission.abstract_file %}
+    <p style="margin-bottom:.75rem;"><strong>Abstract File:</strong> <a href="{{ submission.abstract_file.url }}" target="_blank" class="btn btn-outline btn-sm">Download</a></p>
+    {% else %}
+    <p class="text-muted mb-2">No abstract file uploaded.</p>
+    {% endif %}
+
+    {% if submission.video_link %}
+    <p><strong>Video Link:</strong> <a href="{{ submission.video_link }}" target="_blank" rel="noopener">{{ submission.video_link }}</a></p>
+    {% else %}
+    <p class="text-muted">No video link provided.</p>
+    {% endif %}
+
+    {% if submission.reviewed_at %}
+    <p style="margin-top:1rem;color:var(--muted);font-size:.82rem;">Reviewed: {{ submission.reviewed_at|date:"d M Y H:i" }}</p>
+    {% endif %}
+    {% if submission.pic_remarks %}
+    <div style="margin-top:.5rem;padding:.65rem;background:#fff3cd;border-radius:4px;font-size:.88rem;">
+        <strong>PIC Remarks:</strong> {{ submission.pic_remarks }}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Decision form -->
+{% if submission.status == 'pending_review' %}
+<div class="card">
+    <div class="card-title">Make Decision</div>
+    <form method="post" action="{% url 'pic_accept_submission' project.id %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_remarks">PIC Remarks (optional)</label>
+            <textarea id="id_remarks" name="remarks" rows="3" placeholder="Enter feedback or rejection reason..."></textarea>
+        </div>
+        <div class="gap-sm">
+            <button name="action" value="accept" class="btn btn-primary">Accept Submission</button>
+            <button name="action" value="reject" class="btn btn-danger">Reject Submission</button>
+        </div>
+    </form>
+</div>
+{% else %}
+<div class="card">
+    <p>Decision: <span class="badge badge-{{ submission.status }}">{{ submission.get_status_display }}</span></p>
+    <div class="gap-sm mt-2">
+        <a href="{% url 'pic_assign_judges' project.id %}" class="btn btn-gold btn-sm">Assign Judges</a>
+        <a href="{% url 'pic_submissions' %}" class="btn btn-outline btn-sm">Back to List</a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
