@@ -1,0 +1,38 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Completed Evaluations — FYP Evaluation{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h2>My Completed Evaluations</h2>
+    <p><a href="{% url 'judge_dashboard' %}">← Back to Dashboard</a></p>
+</div>
+
+{% if completed_assignments %}
+{% for a in completed_assignments %}
+<div class="card">
+    <div class="card-title">{{ a.project.title }}</div>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem;">
+        {{ a.project.programme }} — Evaluated {{ a.evaluation.submitted_at|date:"d M Y H:i" }}
+    </p>
+    <div class="score-row"><span class="score-label">Abstract Quality</span><span class="score-max">Max 10</span><span class="score-val">{{ a.evaluation.abstract_quality }}</span></div>
+    <div class="score-row"><span class="score-label">Problem Statement</span><span class="score-max">Max 15</span><span class="score-val">{{ a.evaluation.problem_statement }}</span></div>
+    <div class="score-row"><span class="score-label">System Functionality</span><span class="score-max">Max 25</span><span class="score-val">{{ a.evaluation.system_functionality }}</span></div>
+    <div class="score-row"><span class="score-label">Technical Implementation</span><span class="score-max">Max 20</span><span class="score-val">{{ a.evaluation.technical_implementation }}</span></div>
+    <div class="score-row"><span class="score-label">Presentation / Video Quality</span><span class="score-max">Max 15</span><span class="score-val">{{ a.evaluation.presentation_quality }}</span></div>
+    <div class="score-row"><span class="score-label">Innovation &amp; Value</span><span class="score-max">Max 10</span><span class="score-val">{{ a.evaluation.innovation_value }}</span></div>
+    <div style="margin-top:.75rem;display:flex;justify-content:space-between;align-items:center;">
+        <strong>Total Score</strong>
+        <span class="score-total">{{ a.evaluation.total_score }} / 95</span>
+    </div>
+    {% if a.evaluation.overall_comments %}
+    <div style="margin-top:.75rem;padding:.65rem;background:#f9f9f9;border-radius:4px;font-size:.88rem;">
+        <strong>Comments:</strong> {{ a.evaluation.overall_comments }}
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state"><p>No completed evaluations yet.</p></div>
+{% endif %}
+
+{% endblock %}

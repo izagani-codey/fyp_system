@@ -1,0 +1,69 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Evaluate Project — FYP Evaluation{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'judge_dashboard' %}">Dashboard</a> › <a href="{% url 'judge_project_detail' assignment.id %}">Project Detail</a> › Evaluate</div>
+    <h2>Evaluation Form</h2>
+    <p>{{ project.title }}</p>
+</div>
+
+<!-- Quick reference: project + submission -->
+<div class="card">
+    <div class="card-title">Project Summary</div>
+    <table>
+        <tr><td style="width:160px;font-weight:600;">Title</td><td>{{ project.title }}</td></tr>
+        <tr><td style="font-weight:600;">Leader</td><td>{{ project.leader.full_name }}</td></tr>
+        <tr><td style="font-weight:600;">Supervisor</td><td>{{ project.supervisor_name }}</td></tr>
+    </table>
+    {% if submission.abstract_file %}
+    <p style="margin-top:.75rem;"><a href="{{ submission.abstract_file.url }}" target="_blank" class="btn btn-outline btn-sm">📄 Abstract File</a></p>
+    {% endif %}
+    {% if submission.video_link %}
+    <p style="margin-top:.5rem;"><a href="{{ submission.video_link }}" target="_blank" rel="noopener" class="btn btn-gold btn-sm">▶ Watch Video</a></p>
+    {% endif %}
+</div>
+
+<!-- Evaluation form -->
+<div class="card">
+    <div class="card-title">Score Sheet</div>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="non-field-errors">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
+        {% endif %}
+        {% for field in form %}
+        {% if field.name != 'overall_comments' %}
+        <div class="form-group {% if field.errors %}field-error{% endif %}">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;">
+                <label for="{{ field.id_for_label }}" style="margin:0;">{{ field.label }}</label>
+                <span class="score-max">{{ field.help_text }}</span>
+            </div>
+            {{ field }}
+            {% if field.errors %}
+            <ul class="error-list">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% endfor %}
+        <div style="background:#f0f4ff;padding:.75rem;border-radius:4px;margin-bottom:1rem;font-size:.85rem;color:var(--muted);">
+            Total score is automatically calculated from the six criteria above. Maximum: 95 marks.
+        </div>
+        {% with field=form.overall_comments %}
+        <div class="form-group {% if field.errors %}field-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <ul class="error-list">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+        {% endwith %}
+        <div style="background:var(--warn-bg);padding:.75rem;border-radius:4px;margin-bottom:1rem;font-size:.85rem;color:var(--warn-fg);">
+            ⚠ Once submitted, your evaluation cannot be changed.
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Submit Evaluation</button>
+        <a href="{% url 'judge_project_detail' assignment.id %}" style="display:block;text-align:center;margin-top:.75rem;font-size:.88rem;">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}

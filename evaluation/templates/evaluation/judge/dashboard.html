@@ -1,0 +1,102 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Judge Dashboard — FYP Evaluation{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h2>Welcome, {{ judge.full_name }}</h2>
+    <p>{{ judge.department }} — {{ judge.expertise_area }}</p>
+</div>
+
+{% if not_approved %}
+<div class="card">
+    <div class="card-title">Registration Status</div>
+    <p>
+        Your registration is currently
+        <span class="badge badge-{{ judge.registration_status }}">{{ judge.get_registration_status_display }}</span>.
+    </p>
+    <p style="color:var(--muted);margin-top:.75rem;">
+        {% if judge.registration_status == 'pending' %}
+        Please wait for PIC to review your application. You will receive an email notification.
+        {% elif judge.registration_status == 'rejected' %}
+        Your registration was not approved. Please contact the PIC for more information.
+        {% endif %}
+    </p>
+</div>
+{% else %}
+
+{% if notifications %}
+<div class="card">
+    <div class="card-title">🔔 New Notifications</div>
+    <ul class="notif-list">
+        {% for n in notifications %}
+        <li class="notif-item">{{ n.message }}<br><span class="notif-time">{{ n.created_at|date:"d M Y H:i" }}</span></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="stat-grid">
+    <div class="stat-card red">
+        <div class="stat-num">{{ pending_assignments|length }}</div>
+        <div class="stat-label">Pending Evaluations</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-num">{{ completed_assignments|length }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+</div>
+
+{% if pending_assignments %}
+<div class="card">
+    <div class="card-title">Pending Evaluations</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Project Title</th><th>Programme</th><th>Section</th><th>Leader</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for a in pending_assignments %}
+            <tr>
+                <td>{{ a.project.title }}</td>
+                <td>{{ a.project.programme }}</td>
+                <td>{{ a.project.section }}</td>
+                <td>{{ a.project.leader.full_name }}</td>
+                <td class="table-actions">
+                    <a href="{% url 'judge_project_detail' a.id %}" class="btn btn-outline btn-sm">View</a>
+                    <a href="{% url 'evaluate' a.id %}" class="btn btn-primary btn-sm">Evaluate</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if completed_assignments %}
+<div class="card">
+    <div class="card-title">Completed Evaluations</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Project Title</th><th>Programme</th><th>Total Score</th><th>Submitted</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for a in completed_assignments %}
+            <tr>
+                <td>{{ a.project.title }}</td>
+                <td>{{ a.project.programme }}</td>
+                <td><strong>{{ a.evaluation.total_score }}/95</strong></td>
+                <td>{{ a.evaluation.submitted_at|date:"d M Y" }}</td>
+                <td><a href="{% url 'judge_project_detail' a.id %}" class="btn btn-outline btn-sm">View</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <a href="{% url 'completed_evaluations' %}" class="btn btn-outline btn-sm mt-2">Full History</a>
+</div>
+{% endif %}
+
+{% if not pending_assignments and not completed_assignments %}
+<div class="empty-state"><p>No projects assigned yet. Check back after PIC assigns projects.</p></div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

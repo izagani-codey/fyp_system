@@ -1,0 +1,96 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Project Detail — FYP Evaluation{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'judge_dashboard' %}">Dashboard</a> › Project Detail</div>
+    <h2>{{ project.title }}</h2>
+    <p>{{ project.programme }} — Section {{ project.section }}</p>
+</div>
+
+<!-- Project info -->
+<div class="card">
+    <div class="card-title">Project Information</div>
+    <table>
+        <tr><td style="width:180px;font-weight:600;">Project Title</td><td>{{ project.title }}</td></tr>
+        <tr><td style="font-weight:600;">Programme</td><td>{{ project.programme }}</td></tr>
+        <tr><td style="font-weight:600;">Section</td><td>{{ project.section }}</td></tr>
+        <tr><td style="font-weight:600;">Supervisor</td><td>{{ project.supervisor_name }}</td></tr>
+    </table>
+</div>
+
+<!-- Group members -->
+<div class="card">
+    <div class="card-title">Project Team</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Name</th><th>Student ID</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr>
+                <td>{{ project.leader.full_name }}</td>
+                <td>{{ project.leader.student_id }}</td>
+                <td><span class="badge badge-approved">Leader</span></td>
+            </tr>
+            {% for m in members %}
+            <tr>
+                <td>{{ m.student.full_name }}</td>
+                <td>{{ m.student.student_id }}</td>
+                <td><span class="badge badge-pending">Member</span></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Submission materials -->
+{% if submission %}
+<div class="card">
+    <div class="card-title">Submitted Materials</div>
+
+    {% if submission.abstract_text %}
+    <div style="margin-bottom:1rem;">
+        <strong>Abstract Text:</strong>
+        <div style="margin-top:.5rem;padding:.85rem;background:#f9f9f9;border-radius:4px;font-size:.9rem;line-height:1.7;white-space:pre-wrap;">{{ submission.abstract_text }}</div>
+    </div>
+    {% endif %}
+
+    {% if submission.abstract_file %}
+    <p style="margin-bottom:.75rem;">
+        <strong>Abstract File:</strong>
+        <a href="{{ submission.abstract_file.url }}" target="_blank" class="btn btn-outline btn-sm">📄 Download PDF/File</a>
+    </p>
+    {% endif %}
+
+    {% if submission.video_link %}
+    <p>
+        <strong>Video Presentation:</strong>
+        <a href="{{ submission.video_link }}" target="_blank" rel="noopener" class="btn btn-gold btn-sm">▶ Watch Video</a>
+        <br><small style="color:var(--muted);">{{ submission.video_link }}</small>
+    </p>
+    {% endif %}
+
+    {% if not submission.abstract_text and not submission.abstract_file and not submission.video_link %}
+    <p class="text-muted">No submission materials available yet.</p>
+    {% endif %}
+</div>
+{% else %}
+<div class="card">
+    <p class="text-muted">This project has not submitted any materials yet.</p>
+</div>
+{% endif %}
+
+<!-- Evaluate action -->
+{% if already_evaluated %}
+<div class="card">
+    <p><span class="badge badge-approved">✓ Evaluated</span> You have already submitted your evaluation for this project.</p>
+    <a href="{% url 'completed_evaluations' %}" class="btn btn-outline btn-sm mt-2">View My Evaluations</a>
+</div>
+{% else %}
+<div class="card">
+    <a href="{% url 'evaluate' assignment.id %}" class="btn btn-primary">Submit Evaluation</a>
+    <a href="{% url 'judge_dashboard' %}" class="btn btn-outline" style="margin-left:.75rem;">Back to Dashboard</a>
+</div>
+{% endif %}
+
+{% endblock %}
