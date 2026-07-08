@@ -1,6 +1,5 @@
-{% extends 'evaluation/base.html' %}
-{% block title %}About — FYP Evaluation Process{% endblock %}
-{% block content %}
+{% extends 'evaluation/base.html' %} {% block title %}About — FYP Evaluation
+Process{% endblock %} {% block content %}
 
 <div class="page-header">
     <h2>About the FYP Evaluation Process</h2>
@@ -9,52 +8,73 @@
 
 <div class="card">
     <div class="card-title">Evaluation Overview</div>
-    <p style="color: var(--muted); line-height: 1.7; margin-bottom: 1rem;">
-        The FYP Evaluation Management System provides a structured, transparent process for
-        evaluating Final Year Projects at UniKL MIIT. Projects are evaluated in a conference-style
-        format by expert judges assigned by the Programme-In-Charge (PIC).
+    <p style="color: var(--muted); line-height: 1.7; margin-bottom: 1rem">
+        The FYP Evaluation Management System provides a structured, transparent
+        process for evaluating Final Year Projects at UniKL MIIT. Projects are
+        evaluated in a conference-style format by expert judges assigned by the
+        Programme-In-Charge (PIC).
     </p>
     <div class="steps">
         <div class="step">
             <div class="step-num">1</div>
             <div class="step-body">
                 <h4>Student Registration</h4>
-                <p>Students register an account and create or join a project group. Each project requires a title, programme, section, and supervisor name.</p>
+                <p>
+                    Students register an account and create or join a project
+                    group. Each project requires a title, programme, section,
+                    and supervisor name.
+                </p>
             </div>
         </div>
         <div class="step">
             <div class="step-num">2</div>
             <div class="step-body">
                 <h4>Project Approval</h4>
-                <p>The PIC reviews all submitted project registrations and approves or rejects them before the registration deadline.</p>
+                <p>
+                    The PIC reviews all submitted project registrations and
+                    approves or rejects them before the registration deadline.
+                </p>
             </div>
         </div>
         <div class="step">
             <div class="step-num">3</div>
             <div class="step-body">
                 <h4>Submission</h4>
-                <p>Approved project leaders submit their abstract (text or PDF) and a video presentation link (YouTube / Google Drive).</p>
+                <p>
+                    Approved project leaders submit their abstract (text or PDF)
+                    and a video presentation link (YouTube / Google Drive).
+                </p>
             </div>
         </div>
         <div class="step">
             <div class="step-num">4</div>
             <div class="step-body">
                 <h4>Judge Assignment</h4>
-                <p>The PIC assigns one or more approved judges to each accepted project. Judges receive a notification with project details.</p>
+                <p>
+                    The PIC assigns one or more approved judges to each accepted
+                    project. Judges receive a notification with project details.
+                </p>
             </div>
         </div>
         <div class="step">
             <div class="step-num">5</div>
             <div class="step-body">
                 <h4>Evaluation</h4>
-                <p>Judges review the abstract, PDF, and video, then submit an evaluation covering six criteria totalling 95 marks.</p>
+                <p>
+                    Judges review the abstract, PDF, and video, then submit
+                    scores using the active evaluation template and criteria
+                    configured by PIC.
+                </p>
             </div>
         </div>
         <div class="step">
             <div class="step-num">6</div>
             <div class="step-body">
                 <h4>Results</h4>
-                <p>The PIC compiles all scores and publishes winners and announcements on the public announcements page.</p>
+                <p>
+                    The PIC compiles all scores and publishes winners and
+                    announcements on the public announcements page.
+                </p>
             </div>
         </div>
     </div>
@@ -62,20 +82,24 @@
 
 <div class="info-grid">
     <div class="info-card">
-        <h3>Evaluation Criteria</h3>
-        <ul style="list-style:none; font-size:.88rem; color:var(--muted);">
-            <li style="padding:.3rem 0; border-bottom:1px solid var(--border);">Abstract Quality — <strong>10 marks</strong></li>
-            <li style="padding:.3rem 0; border-bottom:1px solid var(--border);">Problem Statement — <strong>15 marks</strong></li>
-            <li style="padding:.3rem 0; border-bottom:1px solid var(--border);">System Functionality — <strong>25 marks</strong></li>
-            <li style="padding:.3rem 0; border-bottom:1px solid var(--border);">Technical Implementation — <strong>20 marks</strong></li>
-            <li style="padding:.3rem 0; border-bottom:1px solid var(--border);">Presentation/Video Quality — <strong>15 marks</strong></li>
-            <li style="padding:.3rem 0;">Innovation &amp; Value — <strong>10 marks</strong></li>
-        </ul>
-        <p style="margin-top:.75rem; font-weight:700; color:var(--blue);">Total: 95 marks</p>
+        <h3>Dynamic Evaluation Criteria</h3>
+        <p style="font-size: 0.88rem; color: var(--muted); line-height: 1.7">
+            PIC controls the active evaluation template, criteria names,
+            descriptions, ordering, and maximum scores. Judges score each active
+            criterion and the system calculates totals automatically.
+        </p>
     </div>
     <div class="info-card">
         <h3>Important Notes</h3>
-        <ul style="list-style:disc; padding-left:1.2rem; font-size:.88rem; color:var(--muted); line-height:1.8;">
+        <ul
+            style="
+                list-style: disc;
+                padding-left: 1.2rem;
+                font-size: 0.88rem;
+                color: var(--muted);
+                line-height: 1.8;
+            "
+        >
             <li>Evaluation scores are private — visible to PIC only.</li>
             <li>Students will not see individual evaluation marks.</li>
             <li>Judges evaluate non-anonymously.</li>

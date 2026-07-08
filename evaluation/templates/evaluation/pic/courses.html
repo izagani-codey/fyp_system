@@ -1,0 +1,96 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Course Management — PIC{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › Course Management</div>
+    <h2>Course Management</h2>
+    <p>Manage courses for student registration and project creation. Only active courses appear in registration forms.</p>
+</div>
+
+<div class="card">
+    <div class="card-title">{% if edit_obj %}Edit Course{% else %}Add New Course{% endif %}</div>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="{% if edit_obj %}edit{% else %}create{% endif %}">
+        {% if edit_obj %}
+        <input type="hidden" name="course_id" value="{{ edit_obj.id }}">
+        {% endif %}
+        <div class="form-group">
+            <label for="id_name">Course Name</label>
+            <input type="text" id="id_name" name="name" value="{% if edit_obj %}{{ edit_obj.name }}{% endif %}" required>
+        </div>
+        <div class="form-group">
+            <label for="id_code">Course Code</label>
+            <input type="text" id="id_code" name="code" value="{% if edit_obj %}{{ edit_obj.code }}{% endif %}" required>
+        </div>
+        <div class="form-group">
+            <label for="id_description">Description</label>
+            <textarea id="id_description" name="description" rows="3">{% if edit_obj %}{{ edit_obj.description }}{% endif %}</textarea>
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_active" {% if edit_obj %}{% if edit_obj.is_active %}checked{% endif %}{% else %}checked{% endif %}>
+                Active (visible in registration forms)
+            </label>
+        </div>
+        <button type="submit" class="btn btn-primary">{% if edit_obj %}Update Course{% else %}Create Course{% endif %}</button>
+        {% if edit_obj %}
+        <a href="{% url 'pic_courses' %}" class="btn btn-outline">Cancel</a>
+        {% endif %}
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-title">All Courses</div>
+    {% if courses %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in courses %}
+                <tr>
+                    <td><strong>{{ course.name }}</strong></td>
+                    <td>{{ course.code }}</td>
+                    <td>{{ course.description|truncatewords:15 }}</td>
+                    <td>
+                        {% if course.is_active %}
+                        <span class="badge badge-approved">Active</span>
+                        {% else %}
+                        <span class="badge badge-rejected">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="toggle_active">
+                                <input type="hidden" name="course_id" value="{{ course.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline">
+                                    {% if course.is_active %}Deactivate{% else %}Activate{% endif %}
+                                </button>
+                            </form>
+                            <a href="{% url 'pic_courses' %}?edit={{ course.id }}" class="btn btn-sm btn-primary">Edit</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No courses created yet. Add your first course above.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

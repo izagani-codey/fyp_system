@@ -1,26 +1,75 @@
 {% extends 'evaluation/base.html' %}
-{% block title %}Evaluation Tracking — PIC{% endblock %}
+{% block title %}Evaluation Forms — PIC{% endblock %}
 {% block content %}
 
 <div class="page-header">
-    <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › Evaluations</div>
-    <h2>Evaluation Tracking</h2>
+    <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › Evaluation Forms</div>
+    <h2>Evaluation Form Submissions</h2>
 </div>
 
-{% if pending_assignments %}
+<div class="card" style="padding:1rem;">
+    <form method="get" class="gap-md">
+        <label style="margin:0;">Status:</label>
+        <select name="status" onchange="this.form.submit()">
+            <option value="" {% if not status_filter %}selected{% endif %}>All</option>
+            <option value="pending_review" {% if status_filter == 'pending_review' %}selected{% endif %}>Pending Review</option>
+            <option value="accepted" {% if status_filter == 'accepted' %}selected{% endif %}>Accepted</option>
+            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+        <label style="margin:0;">Course:</label>
+        <select name="course" onchange="this.form.submit()">
+            <option value="" {% if not course_filter %}selected{% endif %}>All Courses</option>
+            {% for course in courses %}
+            <option value="{{ course.id }}" {% if course_filter == course.id|stringformat:"s" %}selected{% endif %}>{{ course.name }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+{% if eval_submissions %}
 <div class="card">
-    <div class="card-title">Pending Evaluations ({{ pending_assignments|length }})</div>
+    <div class="card-title">Submitted Forms ({{ eval_submissions|length }})</div>
     <div class="table-wrap">
         <table>
-            <thead><tr><th>Project</th><th>Programme</th><th>Judge</th><th>Assigned</th><th>Status</th></tr></thead>
+            <thead>
+                <tr><th>Project Title</th><th>Judge</th><th>Status</th><th>Submitted</th><th>Reviewed By</th><th>Actions</th></tr>
+            </thead>
             <tbody>
-            {% for a in pending_assignments %}
+            {% for sub in eval_submissions %}
+            <tr>
+                <td>{{ sub.assignment.project.title }}</td>
+                <td>{{ sub.assignment.judge.full_name }}</td>
+                <td>
+                    <span class="badge {% if sub.status == 'pending_review' %}badge-pending{% elif sub.status == 'accepted' %}badge-approved{% elif sub.status == 'rejected' %}badge-rejected{% endif %}">
+                        {{ sub.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ sub.submitted_at|date:"d M Y H:i" }}</td>
+                <td>{% if sub.reviewed_by %}{{ sub.reviewed_by.get_full_name|default:sub.reviewed_by.username }}{% else %}—{% endif %}</td>
+                <td class="table-actions">
+                    <a href="{% url 'pic_review_evaluation' sub.id %}" class="btn btn-primary btn-sm">Review</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if not status_filter and unsubmitted %}
+<div class="card">
+    <div class="card-title">Not Yet Submitted ({{ unsubmitted|length }})</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Project Title</th><th>Judge</th><th>Assigned</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for a in unsubmitted %}
             <tr>
                 <td>{{ a.project.title }}</td>
-                <td>{{ a.project.programme }}</td>
                 <td>{{ a.judge.full_name }}</td>
                 <td>{{ a.assigned_at|date:"d M Y" }}</td>
-                <td><span class="badge badge-pending">Pending</span></td>
+                <td><span class="badge badge-pending">Not Submitted</span></td>
             </tr>
             {% endfor %}
             </tbody>
@@ -29,29 +78,8 @@
 </div>
 {% endif %}
 
-{% if completed_assignments %}
-<div class="card">
-    <div class="card-title">Completed Evaluations ({{ completed_assignments|length }})</div>
-    <div class="table-wrap">
-        <table>
-            <thead><tr><th>Project</th><th>Judge</th><th>Total Score</th><th>Submitted</th></tr></thead>
-            <tbody>
-            {% for a in completed_assignments %}
-            <tr>
-                <td>{{ a.project.title }}</td>
-                <td>{{ a.judge.full_name }}</td>
-                <td><strong>{{ a.evaluation.total_score }}/95</strong></td>
-                <td>{{ a.evaluation.submitted_at|date:"d M Y H:i" }}</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-{% endif %}
-
-{% if not pending_assignments and not completed_assignments %}
-<div class="empty-state"><p>No judge assignments yet.</p></div>
+{% if not eval_submissions and not unsubmitted %}
+<div class="empty-state"><p>No evaluation form submissions yet.</p></div>
 {% endif %}
 
 {% endblock %}

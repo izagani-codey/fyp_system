@@ -1,176 +1,268 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
-from evaluation.decorators import role_required, deadline_active
-from evaluation.forms import EvaluationForm
+from evaluation.decorators import deadline_active, role_required
+from evaluation.forms import EvaluationSubmissionForm
 from evaluation.models import (
-    JudgeProfile, JudgeAssignment, ProjectMember, Notification,
+    EvaluationScore,
+    EvaluationSubmission,
+    EvaluationTemplate,
+    JudgeAssignment,
+    Notification,
+    ProjectMember,
 )
 from evaluation.utils import notify
 
 
 @login_required
-@role_required('judge')
+@role_required("judge")
 def judge_dashboard_view(request):
-    """
-    Judge dashboard showing:
-    - Registration/approval status
-    - Pending and completed assignments
-    """
     judge = request.user.judge_profile
 
-    if judge.registration_status != 'approved':
-        # Not yet approved — show pending status page
-        return render(request, 'evaluation/judge/dashboard.html', {
-            'judge': judge,
-            'not_approved': True,
-        })
+    if judge.registration_status != "approved":
+        return render(
+            request,
+            "evaluation/judge/dashboard.html",
+            {
+                "judge": judge,
+                "not_approved": True,
+            },
+        )
 
-    # Get all assignments for this judge
     all_assignments = JudgeAssignment.objects.filter(judge=judge).select_related(
-        'project', 'project__leader', 'project__submission'
+        "project", "project__leader", "project__course", "project__submission"
     )
 
-    # Separate pending (no evaluation yet) from completed
-    pending = []
-    completed = []
-    for a in all_assignments:
-        if hasattr(a, 'evaluation'):
-            completed.append(a)
-        else:
-            pending.append(a)
+    pending = []  # no submission yet
+    submitted = []  # pending_review or accepted or rejected
 
-    # Fetch unread notifications
-    notifications = list(Notification.objects.filter(user=request.user, is_read=False)[:5])
+    for assignment in all_assignments:
+        try:
+            assignment.eval_submission
+            submitted.append(assignment)
+        except EvaluationSubmission.DoesNotExist:
+            pending.append(assignment)
+
+    notifications = list(
+        Notification.objects.filter(user=request.user, is_read=False)[:5]
+    )
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
 
-    return render(request, 'evaluation/judge/dashboard.html', {
-        'judge': judge,
-        'not_approved': False,
-        'pending_assignments': pending,
-        'completed_assignments': completed,
-        'notifications': notifications,
-    })
+    return render(
+        request,
+        "evaluation/judge/dashboard.html",
+        {
+            "judge": judge,
+            "not_approved": False,
+            "pending_assignments": pending,
+            "submitted_assignments": submitted,
+            "notifications": notifications,
+        },
+    )
 
 
 @login_required
-@role_required('judge')
+@role_required("judge")
 def judge_project_detail_view(request, assignment_id):
-    """
-    Show full project details for a judge's assigned project:
-    - Student/group info (all members)
-    - Project title, programme, supervisor
-    - Abstract text and PDF
-    - Video link
-    Judges CANNOT see scores from this view.
-    """
+    """Show full project details: student/group info, abstract, video, template download."""
     judge = request.user.judge_profile
-    assignment = get_object_or_404(JudgeAssignment, id=assignment_id, judge=judge)
+    assignment = get_object_or_404(
+        JudgeAssignment.objects.select_related("project__course", "project__leader"),
+        id=assignment_id,
+        judge=judge,
+    )
     project = assignment.project
 
-    # Get all project members (leader + additional members)
-    members = list(ProjectMember.objects.filter(project=project).select_related('student'))
+    members = list(
+        ProjectMember.objects.filter(project=project).select_related(
+            "student", "student__course"
+        )
+    )
 
-    # Get submission safely
     try:
         submission = project.submission
     except Exception:
         submission = None
 
-    already_evaluated = hasattr(assignment, 'evaluation')
+    try:
+        eval_submission = assignment.eval_submission
+    except EvaluationSubmission.DoesNotExist:
+        eval_submission = None
 
-    return render(request, 'evaluation/judge/project_detail.html', {
-        'assignment': assignment,
-        'project': project,
-        'members': members,
-        'submission': submission,
-        'already_evaluated': already_evaluated,
-    })
+    active_template = (
+        EvaluationTemplate.objects.filter(is_active=True)
+        .prefetch_related("criteria")
+        .first()
+    )
+
+    return render(
+        request,
+        "evaluation/judge/project_detail.html",
+        {
+            "assignment": assignment,
+            "project": project,
+            "members": members,
+            "submission": submission,
+            "eval_submission": eval_submission,
+            "active_template": active_template,
+        },
+    )
 
 
 @login_required
-@role_required('judge')
-@deadline_active('evaluation', redirect_url='judge_dashboard',
-                 message="The evaluation deadline has passed.")
-def evaluate_view(request, assignment_id):
+@role_required("judge")
+@deadline_active(
+    "evaluation",
+    redirect_url="judge_dashboard",
+    message="The evaluation deadline has passed.",
+)
+def submit_evaluation_view(request, assignment_id):
     """
-    Judge fills in and submits the evaluation form for their assigned project.
-    - Judges cannot re-submit after submitting once.
-    - Judges cannot reject assignments.
-    - Total score is auto-calculated on save.
+    Judge submits scores against the active template.
+    Rejected submissions can be corrected and resubmitted.
     """
     judge = request.user.judge_profile
-    assignment = get_object_or_404(JudgeAssignment, id=assignment_id, judge=judge)
+    assignment = get_object_or_404(
+        JudgeAssignment.objects.select_related("project__leader", "project__course"),
+        id=assignment_id,
+        judge=judge,
+    )
 
-    # Prevent re-submission
-    if hasattr(assignment, 'evaluation'):
-        messages.info(request, "You have already submitted an evaluation for this project.")
-        return redirect('judge_dashboard')
+    try:
+        existing = assignment.eval_submission
+    except EvaluationSubmission.DoesNotExist:
+        existing = None
+
+    if existing:
+        if existing.status == "accepted":
+            messages.info(request, "Your evaluation has been accepted by PIC.")
+            return redirect("judge_dashboard")
+        if existing.status == "pending_review":
+            messages.info(request, "Your evaluation is currently under PIC review.")
+            return redirect("judge_dashboard")
+        # status == 'rejected' → allow resubmit
 
     project = assignment.project
 
-    # The project must have an accepted submission before evaluation
     try:
-        submission = project.submission
-        if submission.status != 'accepted':
+        project_submission = project.submission
+        if project_submission.status != "accepted":
             messages.warning(
                 request,
-                "This project's submission has not been accepted yet. Evaluation is not open."
+                "This project's materials have not been accepted yet. Evaluation is not open.",
             )
-            return redirect('judge_dashboard')
+            return redirect("judge_dashboard")
     except Exception:
         messages.warning(request, "This project has no submission yet.")
-        return redirect('judge_dashboard')
+        return redirect("judge_dashboard")
 
-    members = list(ProjectMember.objects.filter(project=project).select_related('student'))
+    active_template = (
+        EvaluationTemplate.objects.filter(is_active=True)
+        .prefetch_related("criteria")
+        .first()
+    )
+    if not active_template:
+        messages.warning(request, "PIC has not activated an evaluation template yet.")
+        return redirect("judge_project_detail", assignment_id=assignment.id)
+    if not active_template.criteria.exists():
+        messages.warning(
+            request,
+            "The active evaluation template has no criteria yet. Please contact PIC.",
+        )
+        return redirect("judge_project_detail", assignment_id=assignment.id)
 
-    if request.method == 'POST':
-        form = EvaluationForm(request.POST)
+    members = list(
+        ProjectMember.objects.filter(project=project).select_related(
+            "student", "student__course"
+        )
+    )
+
+    if request.method == "POST":
+        form = EvaluationSubmissionForm(
+            active_template, request.POST, request.FILES, instance=existing
+        )
         if form.is_valid():
-            evaluation = form.save(commit=False)
-            evaluation.assignment = assignment
-            evaluation.save()  # total_score auto-calculated in model.save()
+            sub = form.save(commit=False)
+            sub.assignment = assignment
+            sub.template = active_template
+            sub.status = "pending_review"
+            sub.submitted_at = timezone.now()
+            # Reset review fields on (re)submit
+            sub.reviewed_by = None
+            sub.reviewed_at = None
+            sub.pic_feedback = ""
+            sub.save()
 
-            # Notify the project leader that evaluation has been submitted
-            notify(
-                project.leader.user,
-                f"Your project '{project.title}' has been evaluated.",
-                email_subject="FYP System — Evaluation Submitted",
-            )
+            # Replace previous scores so resubmissions exactly match the current form.
+            sub.scores.all().delete()
+            for criterion, score in form.score_items():
+                score_obj = EvaluationScore(
+                    submission=sub, criterion=criterion, score=score
+                )
+                score_obj.full_clean()
+                score_obj.save()
+            sub.recalculate_total()
+
+            is_resubmit = existing is not None
+            action_word = "resubmitted" if is_resubmit else "submitted"
+
+            # Notify all PIC users
+            for pic_user in User.objects.filter(profile__role="pic", is_active=True):
+                notify(
+                    pic_user,
+                    f"Judge {judge.full_name} has {action_word} an evaluation "
+                    f"for '{project.title}'.",
+                    email_subject="FYP System — Evaluation Submitted",
+                )
+
             messages.success(
-                request,
-                f"Evaluation submitted successfully. Total: {evaluation.total_score}/95."
+                request, f"Evaluation {action_word} successfully. Awaiting PIC review."
             )
-            return redirect('judge_dashboard')
+            return redirect("judge_dashboard")
     else:
-        form = EvaluationForm()
+        form = EvaluationSubmissionForm(active_template, instance=existing)
 
-    return render(request, 'evaluation/judge/evaluate.html', {
-        'form': form,
-        'assignment': assignment,
-        'project': project,
-        'submission': submission,
-        'members': members,
-    })
+    return render(
+        request,
+        "evaluation/judge/submit_evaluation.html",
+        {
+            "form": form,
+            "assignment": assignment,
+            "project": project,
+            "project_submission": project_submission,
+            "members": members,
+            "existing": existing,
+            "active_template": active_template,
+        },
+    )
 
 
 @login_required
-@role_required('judge')
-def completed_evaluations_view(request):
-    """
-    Show the judge's completed evaluations.
-    Shows which projects they evaluated and confirms submission.
-    Does NOT show scores to other parties — but shows the judge their OWN submitted scores.
-    """
+@role_required("judge")
+def judge_submissions_view(request):
+    """Show all evaluation submissions by this judge with their current status."""
     judge = request.user.judge_profile
-    completed = JudgeAssignment.objects.filter(
-        judge=judge
-    ).select_related(
-        'project', 'project__leader', 'evaluation'
-    ).filter(evaluation__isnull=False)
+    assignments = JudgeAssignment.objects.filter(judge=judge).select_related(
+        "project", "project__leader", "project__course"
+    )
 
-    return render(request, 'evaluation/judge/completed_evaluations.html', {
-        'judge': judge,
-        'completed_assignments': completed,
-    })
+    submitted = []
+    unsubmitted = []
+    for assignment in assignments:
+        try:
+            submitted.append((assignment, assignment.eval_submission))
+        except EvaluationSubmission.DoesNotExist:
+            unsubmitted.append(assignment)
+
+    return render(
+        request,
+        "evaluation/judge/submissions.html",
+        {
+            "judge": judge,
+            "submitted": submitted,
+            "unsubmitted": unsubmitted,
+        },
+    )

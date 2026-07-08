@@ -38,17 +38,17 @@
 <div class="stat-grid">
     <div class="stat-card red">
         <div class="stat-num">{{ pending_assignments|length }}</div>
-        <div class="stat-label">Pending Evaluations</div>
+        <div class="stat-label">Awaiting Submission</div>
     </div>
     <div class="stat-card green">
-        <div class="stat-num">{{ completed_assignments|length }}</div>
-        <div class="stat-label">Completed</div>
+        <div class="stat-num">{{ submitted_assignments|length }}</div>
+        <div class="stat-label">Forms Submitted</div>
     </div>
 </div>
 
 {% if pending_assignments %}
 <div class="card">
-    <div class="card-title">Pending Evaluations</div>
+    <div class="card-title">Projects — Evaluation Form Not Yet Submitted</div>
     <div class="table-wrap">
         <table>
             <thead><tr><th>Project Title</th><th>Programme</th><th>Section</th><th>Leader</th><th>Actions</th></tr></thead>
@@ -60,8 +60,8 @@
                 <td>{{ a.project.section }}</td>
                 <td>{{ a.project.leader.full_name }}</td>
                 <td class="table-actions">
-                    <a href="{% url 'judge_project_detail' a.id %}" class="btn btn-outline btn-sm">View</a>
-                    <a href="{% url 'evaluate' a.id %}" class="btn btn-primary btn-sm">Evaluate</a>
+                    <a href="{% url 'judge_project_detail' a.id %}" class="btn btn-outline btn-sm">View Details</a>
+                    <a href="{% url 'submit_evaluation' a.id %}" class="btn btn-primary btn-sm">Submit Form</a>
                 </td>
             </tr>
             {% endfor %}
@@ -69,32 +69,52 @@
         </table>
     </div>
 </div>
+{% else %}
+<div class="empty-state">
+    <p>No pending evaluations. All assigned projects have been submitted.</p>
+</div>
 {% endif %}
 
-{% if completed_assignments %}
+{% if submitted_assignments %}
 <div class="card">
-    <div class="card-title">Completed Evaluations</div>
+    <div class="card-title">Submitted Evaluation Forms</div>
     <div class="table-wrap">
         <table>
-            <thead><tr><th>Project Title</th><th>Programme</th><th>Total Score</th><th>Submitted</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Project Title</th><th>Programme</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead>
             <tbody>
-            {% for a in completed_assignments %}
+            {% for a in submitted_assignments %}
             <tr>
                 <td>{{ a.project.title }}</td>
                 <td>{{ a.project.programme }}</td>
-                <td><strong>{{ a.evaluation.total_score }}/95</strong></td>
-                <td>{{ a.evaluation.submitted_at|date:"d M Y" }}</td>
-                <td><a href="{% url 'judge_project_detail' a.id %}" class="btn btn-outline btn-sm">View</a></td>
+                <td>
+                    {% with s=a.eval_submission %}
+                    <span class="badge badge-{{ s.status|cut:'_' }}
+                        {% if s.status == 'pending_review' %}badge-pending{% elif s.status == 'accepted' %}badge-approved{% elif s.status == 'rejected' %}badge-rejected{% endif %}">
+                        {{ s.get_status_display }}
+                    </span>
+                    {% endwith %}
+                </td>
+                <td>{{ a.eval_submission.submitted_at|date:"d M Y" }}</td>
+                <td class="table-actions">
+                    <a href="{% url 'judge_project_detail' a.id %}" class="btn btn-outline btn-sm">View</a>
+                    {% if a.eval_submission.status == 'rejected' %}
+                    <a href="{% url 'submit_evaluation' a.id %}" class="btn btn-gold btn-sm">Resubmit</a>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
             </tbody>
         </table>
     </div>
-    <a href="{% url 'completed_evaluations' %}" class="btn btn-outline btn-sm mt-2">Full History</a>
+    <a href="{% url 'judge_submissions' %}" class="btn btn-outline btn-sm mt-2">View Full Submission History</a>
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No submitted evaluations yet. Submit your first evaluation to see it here.</p>
 </div>
 {% endif %}
 
-{% if not pending_assignments and not completed_assignments %}
+{% if not pending_assignments and not submitted_assignments %}
 <div class="empty-state"><p>No projects assigned yet. Check back after PIC assigns projects.</p></div>
 {% endif %}
 

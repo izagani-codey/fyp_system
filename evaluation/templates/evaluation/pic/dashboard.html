@@ -7,6 +7,18 @@
     <p>UniKL MIIT FYP Evaluation Management — Overview</p>
 </div>
 
+<div class="card" style="padding:1rem;">
+    <form method="get" class="gap-md">
+        <label style="margin:0;">Course:</label>
+        <select name="course" onchange="this.form.submit()">
+            <option value="" {% if not course_filter %}selected{% endif %}>All Courses</option>
+            {% for course in courses %}
+            <option value="{{ course.id }}" {% if course_filter == course.id|stringformat:"s" %}selected{% endif %}>{{ course.name }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
 <div class="stat-grid">
     <div class="stat-card">
         <div class="stat-num">{{ total_projects }}</div>
@@ -22,7 +34,7 @@
     </div>
     <div class="stat-card gold">
         <div class="stat-num">{{ pending_submissions }}</div>
-        <div class="stat-label">Submissions to Review</div>
+        <div class="stat-label">Materials to Review</div>
     </div>
     <div class="stat-card green">
         <div class="stat-num">{{ accepted_submissions }}</div>
@@ -32,17 +44,26 @@
         <div class="stat-num">{{ approved_judges }}</div>
         <div class="stat-label">Approved Judges</div>
     </div>
-    <div class="stat-card red">
-        <div class="stat-num">{{ pending_evaluations }}</div>
-        <div class="stat-label">Evaluations Pending</div>
+    <div class="stat-card gold">
+        <div class="stat-num">{{ pending_eval_forms }}</div>
+        <div class="stat-label">Eval Forms to Review</div>
     </div>
     <div class="stat-card green">
-        <div class="stat-num">{{ completed_evaluations }}</div>
-        <div class="stat-label">Evaluations Done</div>
+        <div class="stat-num">{{ accepted_eval_forms }}</div>
+        <div class="stat-label">Eval Forms Accepted</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-num">{{ unsubmitted_assignments }}</div>
+        <div class="stat-label">Forms Not Submitted</div>
     </div>
 </div>
 
 <div class="info-grid">
+    <a href="{% url 'pic_courses' %}" class="info-card" style="text-decoration:none;">
+        <div class="info-card-icon">&#128218;</div>
+        <h3>Manage Courses</h3>
+        <p>Add, edit, activate, or deactivate courses for registration.</p>
+    </a>
     <a href="{% url 'pic_project_registrations' %}" class="info-card" style="text-decoration:none;">
         <div class="info-card-icon">&#128193;</div>
         <h3>Manage Projects</h3>
@@ -60,13 +81,18 @@
     </a>
     <a href="{% url 'pic_evaluations' %}" class="info-card" style="text-decoration:none;">
         <div class="info-card-icon">&#128202;</div>
-        <h3>Track Evaluations</h3>
-        <p>Monitor pending and completed judge evaluations.</p>
+        <h3>Evaluation Forms</h3>
+        <p>Review submitted evaluation forms from judges.</p>
+    </a>
+    <a href="{% url 'pic_eval_templates' %}" class="info-card" style="text-decoration:none;">
+        <div class="info-card-icon">&#128203;</div>
+        <h3>Form Templates</h3>
+        <p>Upload evaluation form templates for judges to download.</p>
     </a>
     <a href="{% url 'pic_results' %}" class="info-card" style="text-decoration:none;">
         <div class="info-card-icon">&#127942;</div>
         <h3>Results</h3>
-        <p>View compiled scores and export CSV.</p>
+        <p>View submission statuses and export CSV report.</p>
     </a>
     <a href="{% url 'pic_deadlines' %}" class="info-card" style="text-decoration:none;">
         <div class="info-card-icon">&#9200;</div>

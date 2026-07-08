@@ -17,6 +17,13 @@
             <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
             <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
         </select>
+        <label style="margin:0;">Course:</label>
+        <select name="course" onchange="this.form.submit()">
+            <option value="" {% if not course_filter %}selected{% endif %}>All Courses</option>
+            {% for course in courses %}
+            <option value="{{ course.id }}" {% if course_filter == course.id|stringformat:"s" %}selected{% endif %}>{{ course.name }}</option>
+            {% endfor %}
+        </select>
     </form>
 </div>
 
@@ -24,13 +31,13 @@
     <div class="table-wrap">
         <table>
             <thead>
-                <tr><th>Title</th><th>Programme</th><th>Section</th><th>Leader</th><th>Submitted</th><th>Status</th><th>Actions</th></tr>
+                <tr><th>Title</th><th>Course</th><th>Section</th><th>Leader</th><th>Submitted</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
             {% for p in projects %}
             <tr>
                 <td>{{ p.title }}</td>
-                <td>{{ p.programme }}</td>
+                <td>{% if p.course %}{{ p.course.name }}{% else %}{{ p.programme }}{% endif %}</td>
                 <td>{{ p.section }}</td>
                 <td>{{ p.leader.full_name }}</td>
                 <td>{{ p.created_at|date:"d M Y" }}</td>

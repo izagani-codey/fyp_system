@@ -16,24 +16,32 @@
             <option value="accepted"       {% if status_filter == 'accepted' %}selected{% endif %}>Accepted</option>
             <option value="rejected"       {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
         </select>
+        <label style="margin:0;">Course:</label>
+        <select name="course" onchange="this.form.submit()">
+            <option value="" {% if not course_filter %}selected{% endif %}>All Courses</option>
+            {% for course in courses %}
+            <option value="{{ course.id }}" {% if course_filter == course.id|stringformat:"s" %}selected{% endif %}>{{ course.name }}</option>
+            {% endfor %}
+        </select>
     </form>
 </div>
 
 <div class="card">
     <div class="table-wrap">
         <table>
-            <thead><tr><th>Project Title</th><th>Leader</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Project Title</th><th>Course</th><th>Leader</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
             {% for sub in submissions %}
             <tr>
                 <td>{{ sub.project.title }}</td>
-                <td>{{ sub.project.leader.full_name }}</td>
+                <td>{% if sub.project.course %}{{ sub.project.course.name }}{% else %}{{ sub.project.programme }}{% endif %}</td>
+                                <td>{{ sub.project.leader.full_name }}</td>
                 <td>{{ sub.submitted_at|date:"d M Y" }}</td>
                 <td><span class="badge badge-{{ sub.status }}">{{ sub.get_status_display }}</span></td>
                 <td><a href="{% url 'pic_submission_detail' sub.project.id %}" class="btn btn-outline btn-sm">Review</a></td>
             </tr>
             {% empty %}
-            <tr><td colspan="5" class="text-center text-muted">No submissions found.</td></tr>
+            <tr><td colspan="6" class="text-center text-muted">No submissions found.</td></tr>
             {% endfor %}
             </tbody>
         </table>

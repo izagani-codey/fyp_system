@@ -4,50 +4,82 @@
 
 <div class="page-header">
     <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › Results</div>
-    <h2>Compiled Results</h2>
-    <p>Scores are visible to PIC only.</p>
+    <h2>Evaluation Results</h2>
+    <p>Final scores use accepted evaluation submissions only. Multiple judge scores are averaged. Visible to PIC only.</p>
 </div>
 
-<div style="margin-bottom:1rem;">
-    <a href="{% url 'pic_export_csv' %}" class="btn btn-gold">Export CSV</a>
+<div class="card" style="padding:1rem;">
+    <form method="get" class="gap-md">
+        <label style="margin:0;">Course:</label>
+        <select name="course" onchange="this.form.submit()">
+            <option value="" {% if not course_filter %}selected{% endif %}>All Courses</option>
+            {% for course in courses %}<option value="{{ course.id }}" {% if course_filter == course.id|stringformat:"s" %}selected{% endif %}>{{ course.name }}</option>{% endfor %}
+        </select>
+        <a href="{% url 'pic_export_csv' %}{% if course_filter %}?course={{ course_filter }}{% endif %}" class="btn btn-gold btn-sm">Export CSV</a>
+    </form>
+</div>
+
+<div class="card" style="border-left:4px solid var(--gold);">
+    <div class="card-title">Generate Top 3 Announcements</div>
+    <p class="help-text" style="margin-bottom:1rem;">
+        <strong>Only accepted evaluation submissions are used.</strong> Pending or rejected evaluations are ignored.
+        If a project has multiple accepted judge evaluations, the average total score is used for ranking.
+    </p>
+    <div class="gap-sm">
+        <form method="post" action="{% url 'pic_generate_top3' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-sm">🏆 Generate Overall Top 3</button>
+        </form>
+        <form method="post" action="{% url 'pic_generate_top3' %}" class="gap-sm">
+            {% csrf_token %}
+            <select name="course_id" required style="min-width:200px;">
+                <option value="">Select course for ranking</option>
+                {% for course in courses %}<option value="{{ course.id }}">{{ course.name }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="btn btn-gold btn-sm">🏆 Generate Top 3 by Course</button>
+        </form>
+    </div>
+    <p class="help-text">Generated announcements are published publicly without showing private marks. Students will see only the ranking, not individual scores.</p>
 </div>
 
 {% for r in results %}
 <div class="card">
     <div class="card-title">
-        {{ r.project.title }}
-        {% if r.average_score %}
-        <span style="float:right;font-size:1.1rem;color:var(--blue);">Avg: {{ r.average_score }}/95</span>
-        {% endif %}
+        {% if r.rank %}<span class="badge badge-approved">Rank {{ r.rank }}</span> {% endif %}{{ r.project.title }}
+        <span style="float:right;font-size:.88rem;color:var(--muted);font-weight:normal;">{{ r.submitted_count }}/{{ r.assignment_count }} submitted</span>
     </div>
     <p style="color:var(--muted);font-size:.85rem;margin-bottom:.75rem;">
-        {{ r.project.programme }} &mdash; {{ r.project.section }} &mdash;
-        Leader: {{ r.project.leader.full_name }} &mdash;
-        {{ r.evaluation_count }} evaluation{{ r.evaluation_count|pluralize }}
+        {% if r.project.course %}{{ r.project.course.name }}{% else %}{{ r.project.programme }}{% endif %} — {{ r.project.section }} — Leader: {{ r.project.leader.full_name }}
     </p>
+    <div class="gap-sm mb-2">
+        <span class="badge badge-approved">✓ Accepted: {{ r.accepted_count }}</span>
+        <span class="badge badge-pending">⏳ Pending: {{ r.pending_count }}</span>
+        {% if r.rejected_count %}<span class="badge badge-rejected">✗ Rejected: {{ r.rejected_count }}</span>{% endif %}
+        {% if r.submitted_count < r.assignment_count %}<span class="badge badge-not_submitted">Not Submitted: {{ r.assignment_count|add:"-"|add:r.submitted_count }}</span>{% endif %}
+        {% if r.final_score is not None %}<span class="badge badge-accepted">Final Average: {{ r.final_score|floatformat:2 }}</span>{% else %}<span class="badge badge-not_submitted">No accepted score</span>{% endif %}
+    </div>
 
-    {% if r.evaluations %}
-    {% for ev in r.evaluations %}
+    {% if r.eval_submissions %}
+    {% for sub in r.eval_submissions %}
     <details style="margin-bottom:.5rem;">
         <summary style="cursor:pointer;font-weight:600;color:var(--blue-light);font-size:.9rem;">
-            Judge: {{ ev.assignment.judge.full_name }} &mdash; {{ ev.total_score }}/95
+            {{ sub.assignment.judge.full_name }} — {{ sub.total_score }} —
+            <span class="badge {% if sub.status == 'pending_review' %}badge-pending{% elif sub.status == 'accepted' %}badge-approved{% elif sub.status == 'rejected' %}badge-rejected{% endif %}">{{ sub.get_status_display }}</span>
         </summary>
-        <div style="padding:.75rem 1rem;background:#f9f9f9;border-radius:0 0 4px 4px;">
-            <div class="score-row"><span class="score-label">Abstract Quality</span><span class="score-max">Max 10</span><span class="score-val">{{ ev.abstract_quality }}</span></div>
-            <div class="score-row"><span class="score-label">Problem Statement</span><span class="score-max">Max 15</span><span class="score-val">{{ ev.problem_statement }}</span></div>
-            <div class="score-row"><span class="score-label">System Functionality</span><span class="score-max">Max 25</span><span class="score-val">{{ ev.system_functionality }}</span></div>
-            <div class="score-row"><span class="score-label">Technical Implementation</span><span class="score-max">Max 20</span><span class="score-val">{{ ev.technical_implementation }}</span></div>
-            <div class="score-row"><span class="score-label">Presentation / Video</span><span class="score-max">Max 15</span><span class="score-val">{{ ev.presentation_quality }}</span></div>
-            <div class="score-row"><span class="score-label">Innovation &amp; Value</span><span class="score-max">Max 10</span><span class="score-val">{{ ev.innovation_value }}</span></div>
-            <div style="margin-top:.5rem;font-weight:700;">Total: {{ ev.total_score }}/95</div>
-            {% if ev.overall_comments %}
-            <p style="margin-top:.4rem;font-size:.85rem;color:var(--muted);font-style:italic;">{{ ev.overall_comments }}</p>
-            {% endif %}
+        <div style="padding:.75rem 1rem;background:#f9f9f9;border-radius:0 0 4px 4px;font-size:.88rem;">
+            <p><strong>Submitted:</strong> {{ sub.submitted_at|date:"d M Y H:i" }}</p>
+            {% if sub.template %}<p><strong>Template:</strong> {{ sub.template.title }}</p>{% endif %}
+            {% if sub.reviewed_by %}<p><strong>Reviewed by:</strong> {{ sub.reviewed_by.get_full_name|default:sub.reviewed_by.username }} on {{ sub.reviewed_at|date:"d M Y H:i" }}</p>{% endif %}
+            {% if sub.pic_feedback %}<p><strong>PIC Feedback:</strong> <em>{{ sub.pic_feedback }}</em></p>{% endif %}
+            <p class="gap-sm mt-1">
+                {% if sub.completed_form_file %}<a href="{{ sub.completed_form_file.url }}" target="_blank" class="btn btn-outline btn-sm">⬇ Download Form</a>{% endif %}
+                <a href="{% url 'pic_review_evaluation' sub.id %}" class="btn btn-primary btn-sm">Review</a>
+            </p>
         </div>
     </details>
     {% endfor %}
     {% else %}
-    <p class="text-muted" style="font-size:.85rem;">No evaluations submitted yet.</p>
+    <p class="text-muted" style="font-size:.85rem;">No evaluation submissions yet for this project.</p>
     {% endif %}
 </div>
 {% empty %}

@@ -1,0 +1,99 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Evaluation Templates — PIC{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › Evaluation Templates</div>
+    <h2>Evaluation Templates</h2>
+    <p>Create a dynamic rubric, upload an optional downloadable form file, and manage scoring criteria.</p>
+</div>
+
+<div class="card">
+    <div class="card-title">Create New Template</div>
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create_template">
+        {% if form.non_field_errors %}<div class="non-field-errors">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>{% endif %}
+        {% for field in form %}
+        <div class="form-group {% if field.errors %}field-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}
+            {% if field.errors %}<ul class="error-list">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Save Template</button>
+    </form>
+</div>
+
+{% for t in templates %}
+<div class="card">
+    <div class="card-title">
+        {{ t.title }}
+        {% if t.is_active %}<span class="badge badge-approved" style="margin-left:.5rem;">Active</span>{% else %}<span class="badge badge-rejected" style="margin-left:.5rem;">Inactive</span>{% endif %}
+    </div>
+    <p class="text-muted" style="font-size:.88rem;margin-bottom:.75rem;">{{ t.description|default:"No description." }}</p>
+    <div class="gap-sm mb-2">
+        {% if t.template_file %}
+        <a href="{{ t.template_file.url }}" target="_blank" class="btn btn-outline btn-sm">⬇ Download Template File</a>
+        {% endif %}
+        {% if not t.is_active %}
+        <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="set_active">
+            <input type="hidden" name="template_id" value="{{ t.id }}">
+            <button type="submit" class="btn btn-gold btn-sm">Set Active</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <div class="card-subtitle">Criteria total: {{ t.total_max_score }} marks</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Order</th><th>Name</th><th>Description</th><th>Max Score</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for c in t.criteria.all %}
+            <tr>
+                <td colspan="5">
+                    <form method="post" class="form-row" style="align-items:end;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="edit_criterion">
+                        <input type="hidden" name="criterion_id" value="{{ c.id }}">
+                        <div class="form-group"><label>Order</label><input type="number" name="order" value="{{ c.order }}" min="1"></div>
+                        <div class="form-group"><label>Name</label><input type="text" name="name" value="{{ c.name }}" required></div>
+                        <div class="form-group"><label>Description</label><textarea name="description" rows="2">{{ c.description }}</textarea></div>
+                        <div class="form-group"><label>Max Score</label><input type="number" name="max_score" value="{{ c.max_score }}" min="0" step="0.01" required></div>
+                        <div class="form-group gap-sm"><button type="submit" class="btn btn-primary btn-sm">Save</button></div>
+                    </form>
+                    <form method="post" onsubmit="return confirm('Delete this criterion?');" style="margin-top:.4rem;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_criterion">
+                        <input type="hidden" name="criterion_id" value="{{ c.id }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete {{ c.name }}</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted">No criteria yet. Add the first criterion below.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <hr class="divider">
+    <form method="post" class="form-row" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_criterion">
+        <input type="hidden" name="template_id" value="{{ t.id }}">
+        <div class="form-group"><label>Name</label><input type="text" name="name" placeholder="e.g. System Functionality" required></div>
+        <div class="form-group"><label>Max Score</label><input type="number" name="max_score" min="0" step="0.01" required></div>
+        <div class="form-group"><label>Order</label><input type="number" name="order" min="1" value="{{ t.criteria.all|length|add:1 }}" required></div>
+        <div class="form-group"><label>Description</label><textarea name="description" rows="2" placeholder="Short marking guide"></textarea></div>
+        <div class="form-group"><button type="submit" class="btn btn-primary">Add Criterion</button></div>
+    </form>
+</div>
+{% empty %}
+<div class="empty-state"><p>No templates created yet. Create one above.</p></div>
+{% endfor %}
+
+{% endblock %}

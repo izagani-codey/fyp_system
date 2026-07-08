@@ -1,0 +1,72 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}My Evaluation Submissions — FYP Evaluation{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h2>My Evaluation Submissions</h2>
+    <p><a href="{% url 'judge_dashboard' %}">← Back to Dashboard</a></p>
+</div>
+
+{% if submitted %}
+<div class="card">
+    <div class="card-title">Submitted Forms</div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Project Title</th><th>Programme</th><th>Status</th><th>Submitted</th><th>Reviewed</th><th>PIC Feedback</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+            {% for a, sub in submitted %}
+            <tr>
+                <td>{{ a.project.title }}</td>
+                <td>{{ a.project.programme }}</td>
+                <td>
+                    <span class="badge {% if sub.status == 'pending_review' %}badge-pending{% elif sub.status == 'accepted' %}badge-approved{% elif sub.status == 'rejected' %}badge-rejected{% endif %}">
+                        {{ sub.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ sub.submitted_at|date:"d M Y H:i" }}</td>
+                <td>{{ sub.reviewed_at|date:"d M Y"|default:"—" }}</td>
+                <td style="font-size:.85rem;color:var(--red);">{{ sub.pic_feedback|default:"—" }}</td>
+                <td class="table-actions">
+                    <a href="{% url 'judge_project_detail' a.id %}" class="btn btn-outline btn-sm">View</a>
+                    {% if sub.status == 'rejected' %}
+                    <a href="{% url 'submit_evaluation' a.id %}" class="btn btn-gold btn-sm">Resubmit</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if unsubmitted %}
+<div class="card">
+    <div class="card-title">Pending Submission ({{ unsubmitted|length }})</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Project Title</th><th>Programme</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for a in unsubmitted %}
+            <tr>
+                <td>{{ a.project.title }}</td>
+                <td>{{ a.project.programme }}</td>
+                <td class="table-actions">
+                    <a href="{% url 'judge_project_detail' a.id %}" class="btn btn-outline btn-sm">View Details</a>
+                    <a href="{% url 'submit_evaluation' a.id %}" class="btn btn-primary btn-sm">Submit Form</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if not submitted and not unsubmitted %}
+<div class="empty-state"><p>No assigned projects yet.</p></div>
+{% endif %}
+
+{% endblock %}

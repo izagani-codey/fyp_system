@@ -1,0 +1,97 @@
+{% extends 'evaluation/base.html' %}
+{% block title %}Review Evaluation — PIC{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="breadcrumb"><a href="{% url 'pic_dashboard' %}">Dashboard</a> › <a href="{% url 'pic_evaluations' %}">Evaluations</a> › Review</div>
+    <h2>Review Evaluation</h2>
+    <p>{{ sub.assignment.project.title }}</p>
+</div>
+
+<div class="card">
+    <div class="card-title">Submission Details</div>
+    <table>
+        <tr><td style="width:180px;font-weight:600;">Project</td><td>{{ sub.assignment.project.title }}</td></tr>
+        <tr><td style="font-weight:600;">Course</td><td>{% if sub.assignment.project.course %}{{ sub.assignment.project.course.name }}{% else %}{{ sub.assignment.project.programme }}{% endif %}</td></tr>
+        <tr><td style="font-weight:600;">Judge</td><td>{{ sub.assignment.judge.full_name }}</td></tr>
+        <tr><td style="font-weight:600;">Template</td><td>{{ sub.template.title|default:"—" }}</td></tr>
+        <tr><td style="font-weight:600;">Total Score</td><td><strong>{{ sub.total_score }}</strong></td></tr>
+        <tr><td style="font-weight:600;">Submitted At</td><td>{{ sub.submitted_at|date:"d M Y H:i" }}</td></tr>
+        <tr><td style="font-weight:600;">Status</td><td><span class="badge {% if sub.status == 'pending_review' %}badge-pending{% elif sub.status == 'accepted' %}badge-approved{% elif sub.status == 'rejected' %}badge-rejected{% endif %}">{{ sub.get_status_display }}</span></td></tr>
+        {% if sub.remarks %}<tr><td style="font-weight:600;">Judge Remarks</td><td>{{ sub.remarks }}</td></tr>{% endif %}
+        {% if sub.reviewed_by %}<tr><td style="font-weight:600;">Reviewed By</td><td>{{ sub.reviewed_by.get_full_name|default:sub.reviewed_by.username }}</td></tr>{% endif %}
+        {% if sub.pic_feedback %}<tr><td style="font-weight:600;">PIC Feedback</td><td>{{ sub.pic_feedback }}</td></tr>{% endif %}
+    </table>
+</div>
+
+<div class="card">
+    <div class="card-title">Scores</div>
+    {% for score in sub.scores.all %}
+    <div class="score-row">
+        <div>
+            <div class="score-label">{{ score.criterion.name }}</div>
+            {% if score.criterion.description %}<div class="score-max">{{ score.criterion.description }}</div>{% endif %}
+        </div>
+        <div class="score-val">{{ score.score }} / {{ score.criterion.max_score }}</div>
+    </div>
+    {% empty %}
+    <p class="text-muted">No score rows found for this submission.</p>
+    {% endfor %}
+    <div class="text-right mt-2"><span class="score-total">Total: {{ sub.total_score }}</span></div>
+</div>
+
+<div class="card">
+    <div class="card-title">Project Team</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Name</th><th>Student ID</th><th>Course</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td>{{ sub.assignment.project.leader.full_name }}</td><td>{{ sub.assignment.project.leader.student_id }}</td><td>{% if sub.assignment.project.leader.course %}{{ sub.assignment.project.leader.course.name }}{% else %}—{% endif %}</td><td><span class="badge badge-approved">Leader</span></td></tr>
+            {% for m in members %}
+            <tr><td>{{ m.student.full_name }}</td><td>{{ m.student.student_id }}</td><td>{% if m.student.course %}{{ m.student.course.name }}{% else %}—{% endif %}</td><td><span class="badge badge-pending">Member</span></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if sub.completed_form_file %}
+<div class="card" style="border-left:4px solid var(--blue);">
+    <div class="card-title">📎 Completed Evaluation Form Evidence</div>
+    <p style="margin-bottom:.75rem;">Download the judge's uploaded supporting file.</p>
+    <a href="{{ sub.completed_form_file.url }}" target="_blank" class="btn btn-primary">⬇ Download Completed Form</a>
+</div>
+{% endif %}
+
+{% if sub.status != 'accepted' %}
+<div class="card">
+    <div class="card-title">Decision</div>
+    {% if form.non_field_errors %}<div class="non-field-errors">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>{% endif %}
+    <div class="form-group {% if form.pic_feedback.errors %}field-error{% endif %}">
+        <label for="{{ form.pic_feedback.id_for_label }}">{{ form.pic_feedback.label }}</label>
+        {{ form.pic_feedback }}
+        <div class="help-text">Required if rejecting. Optional for acceptance.</div>
+        {% if form.pic_feedback.errors %}<ul class="error-list">{% for e in form.pic_feedback.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    <div class="gap-sm">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="accept">
+            <input type="hidden" name="pic_feedback" id="accept-feedback">
+            <button type="submit" class="btn btn-primary" onclick="document.getElementById('accept-feedback').value=document.getElementById('{{ form.pic_feedback.id_for_label }}').value">✓ Accept</button>
+        </form>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reject">
+            <input type="hidden" name="pic_feedback" id="reject-feedback">
+            <button type="submit" class="btn btn-danger" onclick="document.getElementById('reject-feedback').value=document.getElementById('{{ form.pic_feedback.id_for_label }}').value">✗ Reject</button>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="card"><p><span class="badge badge-approved">✓ Accepted</span> This evaluation has been accepted.</p></div>
+{% endif %}
+
+<a href="{% url 'pic_evaluations' %}" class="btn btn-outline btn-sm">← Back to Evaluations</a>
+
+{% endblock %}

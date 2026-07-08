@@ -4,194 +4,86 @@
 
 <div class="page-header">
     <h2>Welcome, {{ student.full_name }}</h2>
-    <p>{{ student.student_id }} — {{ student.programme }}, Section {{ student.section }}</p>
+    <p>{{ student.student_id }} — {% if student.course %}{{ student.course.name }}{% else %}{{ student.programme }}{% endif %}, Section {{ student.section }}</p>
 </div>
 
-<!-- Unread notifications -->
 {% if notifications %}
 <div class="card">
     <div class="card-title">🔔 New Notifications</div>
     <ul class="notif-list">
-        {% for n in notifications %}
-        <li class="notif-item">
-            {{ n.message }}
-            <br><span class="notif-time">{{ n.created_at|date:"d M Y H:i" }}</span>
-        </li>
-        {% endfor %}
+        {% for n in notifications %}<li class="notif-item">{{ n.message }}<br><span class="notif-time">{{ n.created_at|date:"d M Y H:i" }}</span></li>{% endfor %}
     </ul>
     <a href="{% url 'student_notifications' %}" class="btn btn-outline btn-sm mt-2">View All</a>
 </div>
 {% endif %}
 
-<!-- Status overview cards -->
 <div class="stat-grid">
-    <div class="stat-card">
-        <div class="stat-num">
-            {% if project %}
-            <span class="badge badge-{{ project.registration_status }}">{{ project.get_registration_status_display }}</span>
-            {% else %}
-            <span class="badge badge-not_submitted">No Project</span>
-            {% endif %}
-        </div>
-        <div class="stat-label">Project Status</div>
-    </div>
-    <div class="stat-card gold">
-        <div class="stat-num">
-            {% if submission %}
-            <span class="badge badge-{{ submission.status }}">{{ submission.get_status_display }}</span>
-            {% else %}
-            <span class="badge badge-not_submitted">—</span>
-            {% endif %}
-        </div>
-        <div class="stat-label">Submission Status</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-num">{{ assignments|length }}</div>
-        <div class="stat-label">Judges Assigned</div>
-    </div>
+    <div class="stat-card"><div class="stat-num">{% if project %}<span class="badge badge-{{ project.registration_status }}">{{ project.get_registration_status_display }}</span>{% else %}<span class="badge badge-not_submitted">No Project</span>{% endif %}</div><div class="stat-label">Project Status</div></div>
+    <div class="stat-card gold"><div class="stat-num">{% if submission %}<span class="badge badge-{{ submission.status }}">{{ submission.get_status_display }}</span>{% else %}<span class="badge badge-not_submitted">—</span>{% endif %}</div><div class="stat-label">Submission Status</div></div>
+    <div class="stat-card"><div class="stat-num">{{ assignments|length }}</div><div class="stat-label">Judges Assigned</div></div>
 </div>
 
-<!-- Deadline status -->
 {% if deadlines %}
 <div class="deadline-grid">
     {% if deadlines.registration %}
-    {% with d=deadlines.registration %}
-    <div class="deadline-card {% if d.is_passed %}passed{% else %}active{% endif %}">
-        <div class="deadline-label">Registration Deadline</div>
-        <div class="deadline-date">{{ d.deadline_date|date:"d M Y H:i" }}</div>
-        <div class="deadline-status">
-            {% if d.is_passed %}<span style="color:var(--red);">⛔ Closed</span>
-            {% else %}<span style="color:#28a745;">✓ Open</span>{% endif %}
-        </div>
-    </div>
-    {% endwith %}
+    {% with d=deadlines.registration %}<div class="deadline-card {% if d.is_passed %}passed{% else %}active{% endif %}"><div class="deadline-label">Registration Deadline</div><div class="deadline-date">{{ d.deadline_date|date:"d M Y H:i" }}</div><div class="deadline-status">{% if d.is_passed %}<span style="color:var(--red);">⛔ Closed</span>{% else %}<span style="color:#28a745;">✓ Open</span>{% endif %}</div></div>{% endwith %}
     {% endif %}
     {% if deadlines.submission %}
-    {% with d=deadlines.submission %}
-    <div class="deadline-card {% if d.is_passed %}passed{% else %}active{% endif %}">
-        <div class="deadline-label">Submission Deadline</div>
-        <div class="deadline-date">{{ d.deadline_date|date:"d M Y H:i" }}</div>
-        <div class="deadline-status">
-            {% if d.is_passed %}<span style="color:var(--red);">⛔ Closed</span>
-            {% else %}<span style="color:#28a745;">✓ Open</span>{% endif %}
-        </div>
-    </div>
-    {% endwith %}
+    {% with d=deadlines.submission %}<div class="deadline-card {% if d.is_passed %}passed{% else %}active{% endif %}"><div class="deadline-label">Submission Deadline</div><div class="deadline-date">{{ d.deadline_date|date:"d M Y H:i" }}</div><div class="deadline-status">{% if d.is_passed %}<span style="color:var(--red);">⛔ Closed</span>{% else %}<span style="color:#28a745;">✓ Open</span>{% endif %}</div></div>{% endwith %}
     {% endif %}
     {% if deadlines.evaluation %}
-    {% with d=deadlines.evaluation %}
-    <div class="deadline-card {% if d.is_passed %}passed{% else %}active{% endif %}">
-        <div class="deadline-label">Evaluation Deadline</div>
-        <div class="deadline-date">{{ d.deadline_date|date:"d M Y H:i" }}</div>
-        <div class="deadline-status">
-            {% if d.is_passed %}<span style="color:var(--red);">⛔ Closed</span>
-            {% else %}<span style="color:#28a745;">✓ Open</span>{% endif %}
-        </div>
-    </div>
-    {% endwith %}
+    {% with d=deadlines.evaluation %}<div class="deadline-card {% if d.is_passed %}passed{% else %}active{% endif %}"><div class="deadline-label">Evaluation Deadline</div><div class="deadline-date">{{ d.deadline_date|date:"d M Y H:i" }}</div><div class="deadline-status">{% if d.is_passed %}<span style="color:var(--red);">⛔ Closed</span>{% else %}<span style="color:#28a745;">✓ Open</span>{% endif %}</div></div>{% endwith %}
     {% endif %}
 </div>
 {% endif %}
 
-<!-- Project details -->
 {% if project %}
 <div class="card">
     <div class="card-title">Project Details</div>
     <table>
         <tr><td style="width:180px;font-weight:600;">Project Title</td><td>{{ project.title }}</td></tr>
-        <tr><td style="font-weight:600;">Programme</td><td>{{ project.programme }}</td></tr>
+        <tr><td style="font-weight:600;">Course</td><td>{% if project.course %}{{ project.course.name }}{% else %}{{ project.programme }}{% endif %}</td></tr>
         <tr><td style="font-weight:600;">Section</td><td>{{ project.section }}</td></tr>
         <tr><td style="font-weight:600;">Supervisor</td><td>{{ project.supervisor_name }}</td></tr>
         <tr><td style="font-weight:600;">Project ID</td><td><code>{{ project.id }}</code> <small style="color:var(--muted);">(share with group members so they can join)</small></td></tr>
         <tr><td style="font-weight:600;">Role</td><td>{% if is_leader %}Project Leader{% else %}Member{% endif %}</td></tr>
     </table>
-
-    {% if project.pic_remarks %}
-    <div style="margin-top:1rem;padding:.75rem;background:#f9f9f9;border-radius:4px;border-left:3px solid var(--gold);">
-        <strong>PIC Remarks:</strong> {{ project.pic_remarks }}
-    </div>
-    {% endif %}
+    {% if project.pic_remarks %}<div style="margin-top:1rem;padding:.75rem;background:#f9f9f9;border-radius:4px;border-left:3px solid var(--gold);"><strong>PIC Remarks:</strong> {{ project.pic_remarks }}</div>{% endif %}
 </div>
 
-<!-- Group members -->
 {% if members %}
 <div class="card">
     <div class="card-title">Group Members</div>
-    <div class="table-wrap">
-        <table>
-            <thead><tr><th>Name</th><th>Student ID</th></tr></thead>
-            <tbody>
-            <tr>
-                <td>{{ project.leader.full_name }} <span class="badge badge-approved">Leader</span></td>
-                <td>{{ project.leader.student_id }}</td>
-            </tr>
-            {% for m in members %}
-            <tr><td>{{ m.student.full_name }}</td><td>{{ m.student.student_id }}</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <div class="table-wrap"><table><thead><tr><th>Name</th><th>Student ID</th><th>Course</th></tr></thead><tbody>
+        <tr><td>{{ project.leader.full_name }} <span class="badge badge-approved">Leader</span></td><td>{{ project.leader.student_id }}</td><td>{% if project.leader.course %}{{ project.leader.course.name }}{% else %}—{% endif %}</td></tr>
+        {% for m in members %}<tr><td>{{ m.student.full_name }}</td><td>{{ m.student.student_id }}</td><td>{% if m.student.course %}{{ m.student.course.name }}{% else %}—{% endif %}</td></tr>{% endfor %}
+    </tbody></table></div>
 </div>
 {% endif %}
 
-<!-- Submission actions -->
 {% if is_leader and project.registration_status == 'approved' %}
 <div class="card">
     <div class="card-title">Project Submission</div>
-    {% if not submission or submission.status == 'not_submitted' %}
-    <p style="margin-bottom:1rem;color:var(--muted);">You have not submitted your abstract and video yet.</p>
-    <a href="{% url 'submit_project' %}" class="btn btn-gold">Submit Now</a>
-    {% elif submission.status == 'rejected' %}
-    <p><span class="badge badge-rejected">Rejected</span> — {{ submission.pic_remarks }}</p>
-    <a href="{% url 'submit_project' %}" class="btn btn-gold mt-2">Resubmit</a>
-    {% elif submission.status == 'pending_review' %}
-    <p><span class="badge badge-pending_review">Pending Review</span> — Submitted {{ submission.submitted_at|date:"d M Y" }}. Awaiting PIC review.</p>
-    {% elif submission.status == 'accepted' %}
-    <p><span class="badge badge-accepted">Accepted</span> — Your submission has been accepted by PIC.</p>
-    {% endif %}
+    {% if not submission or submission.status == 'not_submitted' %}<p style="margin-bottom:1rem;color:var(--muted);">You have not submitted your abstract and video yet.</p><a href="{% url 'submit_project' %}" class="btn btn-gold">Submit Now</a>{% elif submission.status == 'rejected' %}<p><span class="badge badge-rejected">Rejected</span> — {{ submission.pic_remarks }}</p><a href="{% url 'submit_project' %}" class="btn btn-gold mt-2">Resubmit</a>{% elif submission.status == 'pending_review' %}<p><span class="badge badge-pending_review">Pending Review</span> — Submitted {{ submission.submitted_at|date:"d M Y" }}. Awaiting PIC review.</p>{% elif submission.status == 'accepted' %}<p><span class="badge badge-accepted">Accepted</span> — Your submission has been accepted by PIC.</p>{% endif %}
 </div>
 {% endif %}
 
-<!-- Judge assignments (no scores shown) -->
 {% if assignments %}
 <div class="card">
     <div class="card-title">Evaluation Status</div>
-    <div class="table-wrap">
-        <table>
-            <thead><tr><th>Judge</th><th>Department</th><th>Status</th></tr></thead>
-            <tbody>
-            {% for a in assignments %}
-            <tr>
-                <td>{{ a.judge.full_name }}</td>
-                <td>{{ a.judge.department }}</td>
-                <td>
-                    {% if a.evaluation %}
-                    <span class="badge badge-approved">Evaluated</span>
-                    {% else %}
-                    <span class="badge badge-pending">Pending</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <p class="text-muted" style="font-size:.8rem;margin-top:.75rem;">
-        Note: Evaluation marks are not visible to students. Results will be announced by PIC.
-    </p>
+    <div class="table-wrap"><table><thead><tr><th>Judge</th><th>Department</th><th>Status</th></tr></thead><tbody>
+        {% for a in assignments %}<tr><td>{{ a.judge.full_name }}</td><td>{{ a.judge.department }}</td><td>{% if a.eval_submission %}<span class="badge badge-approved">Submitted</span>{% else %}<span class="badge badge-pending">Pending</span>{% endif %}</td></tr>{% endfor %}
+    </tbody></table></div>
+    <p class="text-muted" style="font-size:.8rem;margin-top:.75rem;">Note: Evaluation marks are not visible to students. Results will be announced by PIC.</p>
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No judges assigned yet. Judges will be assigned after your submission is accepted.</p>
 </div>
 {% endif %}
 
 {% else %}
-<!-- No project yet -->
-<div class="card">
-    <div class="card-title">Get Started</div>
-    <p style="color:var(--muted);margin-bottom:1rem;">You have not registered a project yet. Create a new project or join an existing one.</p>
-    <div class="gap-sm">
-        <a href="{% url 'create_project' %}" class="btn btn-primary">Create New Project</a>
-        <a href="{% url 'join_project' %}" class="btn btn-outline">Join Existing Project</a>
-    </div>
-</div>
+<div class="card"><div class="card-title">Get Started</div><p style="color:var(--muted);margin-bottom:1rem;">You have not registered a project yet. Create a new project or join an existing one.</p><div class="gap-sm"><a href="{% url 'create_project' %}" class="btn btn-primary">Create New Project</a><a href="{% url 'join_project' %}" class="btn btn-outline">Join Existing Project</a></div></div>
 {% endif %}
 
 {% endblock %}

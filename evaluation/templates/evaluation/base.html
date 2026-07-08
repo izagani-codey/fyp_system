@@ -1,61 +1,83 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}FYP Evaluation — UniKL MIIT{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>
+            {% block title %}FYP Evaluation — UniKL MIIT{% endblock %}
+        </title>
+        <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    </head>
+    <body class="{% block body_class %}{% endblock %}">
+        <!-- ── Navigation ── -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="{% url 'home' %}" class="nav-brand">
+                    <span class="brand-unikl">UniKL</span
+                    ><span class="brand-miit"> MIIT</span>
+                    <small class="brand-sub">FYP Evaluation 2026</small>
+                </a>
+                <div class="nav-links">
+                    <a href="{% url 'about' %}" class="nav-link">About</a>
+                    <a href="{% url 'public_announcements' %}" class="nav-link"
+                        >Announcements</a
+                    >
+                    {% if user.is_authenticated %}
+                    <span class="nav-user">{{ user.username }}</span>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-nav"
+                        >Dashboard</a
+                    >
+                    <a href="{% url 'logout' %}" class="btn btn-red-nav"
+                        >Logout</a
+                    >
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-nav"
+                        >Login</a
+                    >
+                    <a
+                        href="{% url 'register_student' %}"
+                        class="btn btn-gold-nav"
+                        >Register</a
+                    >
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
 
-<!-- ── Navigation ── -->
-<nav class="navbar">
-    <div class="nav-container">
-        <a href="{% url 'home' %}" class="nav-brand">
-            <span class="brand-unikl">UniKL</span><span class="brand-miit"> MIIT</span>
-            <small class="brand-sub">FYP Evaluation 2026</small>
-        </a>
-        <div class="nav-links">
-            <a href="{% url 'about' %}" class="nav-link">About</a>
-            <a href="{% url 'public_announcements' %}" class="nav-link">Announcements</a>
-            {% if user.is_authenticated %}
-                <span class="nav-user">{{ user.username }}</span>
-                <a href="{% url 'dashboard' %}" class="btn btn-outline-nav">Dashboard</a>
-                <a href="{% url 'logout' %}" class="btn btn-red-nav">Logout</a>
-            {% else %}
-                <a href="{% url 'login' %}" class="btn btn-outline-nav">Login</a>
-                <a href="{% url 'register_student' %}" class="btn btn-gold-nav">Register</a>
-            {% endif %}
+        <!-- ── Flash messages ── -->
+        {% if messages %}
+        <div class="messages-wrap">
+            {% for msg in messages %}
+            <div class="alert alert-{{ msg.tags }}">
+                <span>{{ msg }}</span>
+                <button
+                    class="alert-close"
+                    onclick="this.parentElement.remove()"
+                >
+                    ×
+                </button>
+            </div>
+            {% endfor %}
         </div>
-    </div>
-</nav>
+        {% endif %}
 
-<!-- ── Flash messages ── -->
-{% if messages %}
-<div class="messages-wrap">
-    {% for msg in messages %}
-    <div class="alert alert-{{ msg.tags }}">
-        <span>{{ msg }}</span>
-        <button class="alert-close" onclick="this.parentElement.remove()">×</button>
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
+        <!-- ── Main content ── -->
+        <main class="main-content">{% block content %}{% endblock %}</main>
 
-<!-- ── Main content ── -->
-<main class="main-content">
-    {% block content %}{% endblock %}
-</main>
+        <!-- ── Footer ── -->
+        <footer class="footer">
+            <div class="footer-inner">
+                <p>
+                    <strong
+                        >Universiti Kuala Lumpur — Malaysian Institute of
+                        Information Technology</strong
+                    >
+                </p>
+                <p>FYP Evaluation Management System &copy; 2026</p>
+            </div>
+        </footer>
 
-<!-- ── Footer ── -->
-<footer class="footer">
-    <div class="footer-inner">
-        <p><strong>Universiti Kuala Lumpur — Malaysian Institute of Information Technology</strong></p>
-        <p>FYP Evaluation Management System &copy; 2026</p>
-    </div>
-</footer>
-
-<script src="{% static 'js/main.js' %}"></script>
-</body>
+        <script src="{% static 'js/main.js' %}"></script>
+    </body>
 </html>
